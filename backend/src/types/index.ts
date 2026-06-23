@@ -77,3 +77,113 @@ export interface MaterialLog {
   log_date: string;
   created_at: string;
 }
+
+export interface MaterialMaster {
+  id: string;
+  material_name: string;
+  unit: string;
+  minimum_stock_level: number;
+  created_at: string;
+}
+
+export interface MaterialInventory {
+  id: string;
+  project_id: string;
+  material_id: string;
+  opening_stock: number;
+  received_stock: number;
+  consumed_stock: number;
+  current_stock: number;
+  created_at: string;
+}
+
+export type RequestStatus = 'Pending' | 'Approved' | 'Ordered' | 'Delivered' | 'Cancelled';
+
+export interface MaterialRequest {
+  id: string;
+  project_id: string;
+  requested_by?: string;
+  material_id?: string;
+  quantity_requested: number;
+  status: RequestStatus;
+  created_at: string;
+}
+
+export interface Supplier {
+  id: string;
+  company_name: string;
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  gst_number?: string;
+  created_at: string;
+}
+
+export type DeliveryStatus = 'Ordered' | 'In Transit' | 'Delivered';
+
+export interface Delivery {
+  id: string;
+  supplier_id?: string;
+  project_id: string;
+  material_id?: string;
+  quantity: number;
+  delivery_date?: string;
+  status: DeliveryStatus;
+  created_at: string;
+}
+
+export type EquipmentStatus = 'Active' | 'Maintenance' | 'Broken';
+
+export interface Equipment {
+  id: string;
+  project_id: string;
+  equipment_name: string;
+  equipment_type?: string;
+  working_hours?: number;
+  idle_hours?: number;
+  status: EquipmentStatus;
+  created_at: string;
+}
+
+export type ActivityStatus = 'Pending' | 'In Progress' | 'Completed';
+
+export interface SiteActivity {
+  id: string;
+  project_id: string;
+  daily_log_id?: string;
+  activity_name: string;
+  floor_number?: string;
+  location?: string;
+  quantity?: number;
+  unit?: string;
+  status: ActivityStatus;
+  created_at: string;
+}
+
+export type IssueCategory = 'Safety' | 'Material' | 'Labour' | 'Equipment' | 'Weather';
+export type IssuePriority = 'Low' | 'Medium' | 'High' | 'Critical';
+export type IssueStatus = 'Open' | 'In Progress' | 'Resolved';
+
+export interface SiteIssue {
+  id: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  category: IssueCategory;
+  priority: IssuePriority;
+  status: IssueStatus;
+  created_at: string;
+}
+
+export interface SitePhoto {
+  id: string;
+  project_id: string;
+  daily_log_id?: string;
+  image_url: string;
+  caption?: string;
+  location?: string;
+  uploaded_by?: string;
+  ai_tags?: any;
+  ai_summary?: string;
+  created_at: string;
+}

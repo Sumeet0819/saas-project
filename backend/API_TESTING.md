@@ -161,7 +161,183 @@ Triggers notifications for specific events.
       "projectId": "12345"
     }
     ```
+### 7. Attendance
+Manages worker attendance records.
+- **Base Route**: `/api/v1/attendance`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
 
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "worker_id": "987e6543-e21b-12d3-a456-426614174000",
+  "attendance_date": "2024-06-25",
+  "check_in": "08:00:00",
+  "check_out": "17:00:00",
+  "total_hours": 9,
+  "status": "Present"
+}
+```
+
+### 8. Deliveries
+Manages material deliveries from suppliers.
+- **Base Route**: `/api/v1/deliveries`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "supplier_id": "111e2222-e89b-12d3-a456-426614174000",
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "material_id": "333e4444-e89b-12d3-a456-426614174000",
+  "quantity": 500,
+  "delivery_date": "2024-06-25",
+  "status": "In Transit"
+}
+```
+
+### 9. Equipment
+Manages project equipment and machinery.
+- **Base Route**: `/api/v1/equipment`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "equipment_name": "Caterpillar Excavator",
+  "equipment_type": "Heavy Machinery",
+  "working_hours": 120,
+  "idle_hours": 15,
+  "status": "Active"
+}
+```
+
+### 10. Material Master
+Manages the global list of materials.
+- **Base Route**: `/api/v1/material-master`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "material_name": "Portland Cement",
+  "unit": "Bags",
+  "minimum_stock_level": 100
+}
+```
+
+### 11. Material Inventory
+Manages material stock levels per project.
+- **Base Route**: `/api/v1/material-inventory`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "material_id": "333e4444-e89b-12d3-a456-426614174000",
+  "opening_stock": 200,
+  "received_stock": 500,
+  "consumed_stock": 150,
+  "current_stock": 550
+}
+```
+
+### 12. Material Requests
+Manages requests for new materials.
+- **Base Route**: `/api/v1/material-requests`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "requested_by": "555e6666-e89b-12d3-a456-426614174000",
+  "material_id": "333e4444-e89b-12d3-a456-426614174000",
+  "quantity_requested": 1000,
+  "status": "Pending"
+}
+```
+
+### 13. Site Activities
+Manages daily activities and tasks on site.
+- **Base Route**: `/api/v1/site-activities`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "daily_log_id": "777e8888-e89b-12d3-a456-426614174000",
+  "activity_name": "Pouring Concrete for Foundation",
+  "floor_number": "Basement",
+  "location": "North Wing",
+  "quantity": 50,
+  "unit": "Cubic Meters",
+  "status": "In Progress"
+}
+```
+
+### 14. Site Issues
+Manages problems or safety concerns on site.
+- **Base Route**: `/api/v1/site-issues`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "title": "Crane Malfunction",
+  "description": "The main tower crane is experiencing hydraulic leaks.",
+  "category": "Equipment",
+  "priority": "Critical",
+  "status": "Open"
+}
+```
+
+### 15. Site Photos
+Manages photographic evidence and logs.
+- **Base Route**: `/api/v1/site-photos`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "project_id": "123e4567-e89b-12d3-a456-426614174000",
+  "daily_log_id": "777e8888-e89b-12d3-a456-426614174000",
+  "image_url": "https://example.com/images/crane_issue.jpg",
+  "caption": "Hydraulic fluid leaking from the main tower crane.",
+  "location": "Central Tower Area",
+  "uploaded_by": "555e6666-e89b-12d3-a456-426614174000"
+}
+```
+
+### 16. Suppliers
+Manages vendors and material suppliers.
+- **Base Route**: `/api/v1/suppliers`
+- **Auth Required**: Yes
+- **Routes**: `GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`
+
+**Dummy JSON Payload (POST / PATCH)**:
+```json
+{
+  "company_name": "BuildPro Materials Ltd",
+  "contact_person": "Michael Scott",
+  "phone": "+1987654321",
+  "email": "sales@buildpro.com",
+  "gst_number": "22AAAAA0000A1Z5"
+}
+```
 ## Testing with Postman or Insomnia
 
 1. Create a new Request.

@@ -4,13 +4,20 @@ import { Project } from '../types';
 
 export const getProjects = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log(`[API /projects] Attempting to fetch projects from Supabase...`);
     const { data, error } = await supabase.from('projects').select('*');
+    
+    console.log(`[API /projects] Supabase responded with error:`, error);
+    console.log(`[API /projects] Supabase responded with data length:`, data ? data.length : 'null');
+    console.log(`[API /projects] Supabase raw data:`, JSON.stringify(data));
+
     if (error) {
       res.status(400).json({ error: error.message });
       return;
     }
     res.status(200).json(data);
   } catch (err: any) {
+    console.error(`[API /projects] Caught exception:`, err);
     res.status(500).json({ error: err.message });
   }
 };
