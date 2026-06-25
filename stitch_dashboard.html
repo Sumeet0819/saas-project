@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head></head><body class="bg-background text-on-surface font-body-md antialiased min-h-screen"><svg aria-hidden="true" class="inline-defs-container" style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Finexy Site Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#aa3000",
+                        "tertiary": "#5a5c5e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "tertiary-fixed": "#e1e2e4",
+                        "surface-tint": "#ae3200",
+                        "on-tertiary-container": "#fcfcfe",
+                        "on-surface": "#1a1b22",
+                        "surface-variant": "#e3e1ec",
+                        "surface-container-high": "#e8e7f1",
+                        "on-secondary-container": "#636262",
+                        "secondary": "#5f5e5e",
+                        "tertiary-fixed-dim": "#c5c6c8",
+                        "primary-fixed": "#ffdbd0",
+                        "outline-variant": "#e1bfb5",
+                        "on-background": "#1a1b22",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#2f3038",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#eeedf7",
+                        "inverse-primary": "#ffb59f",
+                        "outline": "#8d7168",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "tertiary-container": "#737577",
+                        "secondary-container": "#e2dfde",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#cd4719",
+                        "background": "#fbf8ff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-surface-variant": "#59413a",
+                        "on-primary-fixed": "#3a0a00",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-primary-fixed-variant": "#852400",
+                        "surface-bright": "#fbf8ff",
+                        "surface-container-highest": "#e3e1ec",
+                        "surface-dim": "#dad9e3",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f4f2fd",
+                        "primary-fixed-dim": "#ffb59f",
+                        "surface": "#fbf8ff",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#fffbff",
+                        "inverse-on-surface": "#f1effa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "12px",
+                        "stack-sm": "8px",
+                        "card-gap": "20px",
+                        "container-padding": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "display-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-xs": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["24px", { "lineHeight": "30px", "fontWeight": "600" }]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #dad9e3;
+            border-radius: 9999px;
+        }
+    </style>
+<!-- SideNavBar -->
+<nav aria-label="Sidebar Navigation" class="w-20 lg:w-64 h-screen fixed left-0 top-0 bg-inverse-surface flex flex-col py-6 px-4 z-50 overflow-y-auto transition-all duration-200">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2 mb-10">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-on-primary text-[20px]" data-icon="architecture">architecture</span>
+</div>
+<div class="hidden lg:flex flex-col">
+<span class="font-headline-md text-[18px] font-bold text-primary-fixed-dim leading-none tracking-tight">Finexy</span>
+<span class="font-label-xs text-label-xs text-secondary-fixed mt-0.5 opacity-80">Site Management</span>
+</div>
+</div>
+<!-- Main Nav -->
+<ul class="flex flex-col gap-2 flex-grow">
+<li class="">
+<a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 bg-primary text-on-primary font-semibold rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined fill text-[22px]" data-icon="dashboard">dashboard</span>
+<span class="hidden lg:block font-body-sm text-body-sm">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="architecture">architecture</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Projects</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="assignment">assignment</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Daily Logs</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="groups">groups</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Workforce</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="construction">construction</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Materials</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="engineering">engineering</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Equipment</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="visibility">visibility</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Monitoring</span>
+</a>
+</li>
+</ul>
+<!-- Footer Actions -->
+<div class="mt-auto pt-6 border-t border-white/10 flex flex-col gap-2">
+<button class="hidden lg:flex items-center justify-center gap-2 w-full bg-primary text-on-primary py-2.5 rounded-lg font-body-sm text-body-sm font-semibold hover:bg-primary-container transition-colors shadow-sm mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                New Project
+            </button>
+<button aria-label="New Project" class="lg:hidden flex items-center justify-center w-full bg-primary text-on-primary py-2.5 rounded-lg hover:bg-primary-container transition-colors shadow-sm mb-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+</button>
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="help">help</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-secondary-fixed hover:bg-white/10 transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="logout">logout</span>
+<span class="hidden lg:block font-body-sm text-body-sm font-medium">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-20 lg:left-64 z-40 h-16 bg-surface-container-lowest border-b border-surface-variant flex items-center justify-between px-gutter transition-all duration-200">
+<!-- Navigation Links -->
+<nav aria-label="Main Sections" class="hidden md:flex items-center bg-surface-container-low rounded-full px-1 py-1 h-10 border border-surface-variant">
+<a aria-current="page" class="px-4 py-1.5 rounded-full text-on-surface bg-surface shadow-sm font-label-xs text-label-xs font-semibold" href="#">Overview</a>
+<a class="px-4 py-1.5 rounded-full text-secondary hover:text-on-surface font-label-xs text-label-xs font-medium transition-colors" href="#">Activity</a>
+<a class="px-4 py-1.5 rounded-full text-secondary hover:text-on-surface font-label-xs text-label-xs font-medium transition-colors" href="#">Manage</a>
+<a class="px-4 py-1.5 rounded-full text-secondary hover:text-on-surface font-label-xs text-label-xs font-medium transition-colors" href="#">Reports</a>
+</nav>
+<!-- Right Actions -->
+<div class="flex items-center gap-3 ml-auto">
+<button aria-label="search" class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+</button>
+<button aria-label="notifications" class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container-high transition-colors relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button aria-label="settings" class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</button>
+<div class="h-6 w-px bg-surface-variant mx-1 hidden sm:block"></div>
+<button class="flex items-center gap-3 hover:bg-surface-container-high p-1 rounded-full transition-colors">
+<div class="hidden sm:flex flex-col items-end">
+<span class="font-label-xs text-label-xs font-semibold text-on-surface leading-tight">Sajibur Rahman</span>
+<span class="text-[10px] text-secondary leading-none">Project Manager</span>
+</div>
+<img alt="Sajibur Rahman" class="w-8 h-8 rounded-full object-cover border border-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSubHI-QwbO-uFuCN2iZ6P7r0HLhScutsjb_I_Uq5Y8VHxtDNbPC7Mw6dizCxI5YpwtTlRcb7En2lTGtgtEtMb_JT5U6qJX5hFaX7F8vbdE8Y86Jgn-zKph5QaKKLRHEKeNCK4qX5qsUxGSeSMuaf_a2SVPGSs7Cl1H0TdfTw6nM2IJEa9fD8WYuB5NsaIT0QxRJlisXW0HN-OFnAeH9m6SG_R7upSUKepl7-cnTn1UjVtTUsA5vWVgoL7S8EL8HsrKOyahl5Zslyo"/>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-20 lg:ml-64 pt-16 min-h-screen transition-all duration-200">
+<div class="p-6 md:p-container-padding max-w-[1600px] mx-auto space-y-8">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface">Good morning, Sajibur</h1>
+<p class="font-body-md text-body-md text-secondary mt-1">Stay on top of your tasks, monitor progress, and track status.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="bg-surface-container-lowest border border-surface-variant px-4 py-2 rounded-lg text-body-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+                        Export Data
+                    </button>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-card-gap">
+<!-- Left/Main Column (Re-ordered for prominence) -->
+<div class="col-span-12 xl:col-span-8 space-y-card-gap">
+<!-- High-Density Row: KPI Sidebar Grid + Budget Chart (Side-by-side) -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Condensed KPI Grid (Stacked) -->
+<div class="md:col-span-4 lg:col-span-3 flex flex-col gap-3">
+<div class="bg-primary text-on-primary rounded-xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between flex-1 min-h-[110px]">
+<div class="flex justify-between items-start">
+<span class="font-label-xs text-[10px] uppercase tracking-wider opacity-90">Active Projects</span>
+<span class="material-symbols-outlined text-[18px] opacity-80" data-icon="domain">domain</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm">12</div>
+<div class="flex items-center gap-1 mt-0.5 text-[9px] opacity-90">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_upward">arrow_upward</span>
+<span class="">2 added</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-variant flex flex-col justify-between flex-1 min-h-[110px]">
+<div class="flex justify-between items-start">
+<span class="font-label-xs text-[10px] text-secondary uppercase tracking-wider">On-Site</span>
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="engineering">engineering</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">348</div>
+<div class="flex items-center gap-1 mt-0.5 text-primary text-[9px] font-medium">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_downward">arrow_downward</span>
+<span class="">-5%</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-variant flex flex-col justify-between flex-1 min-h-[110px]">
+<div class="flex justify-between items-start">
+<span class="font-label-xs text-[10px] text-secondary uppercase tracking-wider">Critical</span>
+<span class="material-symbols-outlined text-[18px] text-error" data-icon="warning">warning</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">7</div>
+<div class="flex items-center gap-1 mt-0.5 text-error text-[9px] font-medium">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_upward">arrow_upward</span>
+<span class="">+2 today</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-variant flex flex-col justify-between flex-1 min-h-[110px]">
+<div class="flex justify-between items-start">
+<span class="font-label-xs text-[10px] text-secondary uppercase tracking-wider">Alerts</span>
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="inventory_2">inventory_2</span>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-on-surface">14</div>
+<div class="flex items-center gap-1 mt-0.5 text-secondary text-[9px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="remove">remove</span>
+<span class="">Stable</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Prominent Budget Chart -->
+<div class="md:col-span-8 lg:col-span-9 bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<div class="flex flex-wrap justify-between items-start gap-4 mb-8">
+<div>
+<h2 class="font-title-sm text-title-sm text-on-surface">Budget vs. Actual Cost</h2>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Review your financial performance over the year</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-label-xs text-[11px] font-semibold text-primary">Actual</span>
+</div>
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container-high">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-label-xs text-[11px] font-semibold text-secondary">Budget</span>
+</div>
+</div>
+</div>
+<div class="h-[380px] relative group">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-8">
+<div class="w-full border-t border-surface-variant/30"></div>
+<div class="w-full border-t border-surface-variant/30"></div>
+<div class="w-full border-t border-surface-variant/30"></div>
+<div class="w-full border-t border-surface-variant/30"></div>
+<div class="w-full border-t border-surface-variant/30"></div>
+</div>
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 800 200">
+<defs>
+<lineargradient id="actualGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#aa3000" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#aa3000" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M 0 60 Q 100 50 200 70 T 400 65 T 600 55 T 800 60" fill="none" opacity="0.4" stroke="#5a5c5e" stroke-dasharray="4 4" stroke-width="2"></path>
+<path d="M 0 140 Q 100 130 200 160 T 400 120 T 600 135 T 800 150 L 800 200 L 0 200 Z" fill="url(#actualGradient)"></path>
+<path d="M 0 140 Q 100 130 200 160 T 400 120 T 600 135 T 800 150" fill="none" stroke="#aa3000" stroke-width="3"></path>
+<line class="opacity-0 group-hover:opacity-100 transition-opacity" stroke="#aa3000" stroke-dasharray="2 2" stroke-width="1" x1="400" x2="400" y1="0" y2="200"></line>
+<circle class="opacity-0 group-hover:opacity-100 transition-opacity" cx="400" cy="120" fill="#aa3000" r="5" stroke="white" stroke-width="2"></circle>
+</svg>
+<div class="absolute bottom-0 left-0 right-0 flex justify-between px-2">
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Jan</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Feb</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Mar</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Apr</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">May</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Jun</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Jul</span>
+<span class="font-display-lg text-[10px] text-secondary uppercase tracking-wider">Aug</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Row for Distribution (Shifted Down) -->
+<div class="grid grid-cols-1 gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant flex flex-col">
+<div class="mb-6">
+<h2 class="font-title-sm text-title-sm text-on-surface">Workforce Distribution by Trade</h2>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Current personnel allocation across major trades</p>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-around gap-8">
+<!-- Donut Chart -->
+<div class="relative w-48 h-48 flex-shrink-0">
+<svg class="w-full h-full -rotate-90" viewbox="0 0 36 36">
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#aa3000" stroke-dasharray="35 65" stroke-dashoffset="0" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#cd4719" stroke-dasharray="28 72" stroke-dashoffset="-35" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#5a5c5e" stroke-dasharray="21 79" stroke-dashoffset="-63" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#c5c6c8" stroke-dasharray="16 84" stroke-dashoffset="-84" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-bold text-on-surface text-[24px]">348</span>
+<span class="text-[12px] text-secondary uppercase font-medium">Total</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="grid grid-cols-2 gap-x-12 gap-y-4 max-w-md w-full">
+<div class="flex items-center justify-between border-b border-surface-variant pb-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Concrete</span>
+</div>
+<span class="font-label-xs text-secondary">35%</span>
+</div>
+<div class="flex items-center justify-between border-b border-surface-variant pb-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Steel</span>
+</div>
+<span class="font-label-xs text-secondary">28%</span>
+</div>
+<div class="flex items-center justify-between border-b border-surface-variant pb-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Electrical</span>
+</div>
+<span class="font-label-xs text-secondary">21%</span>
+</div>
+<div class="flex items-center justify-between border-b border-surface-variant pb-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></div>
+<span class="font-body-sm text-body-sm text-on-surface">Plumbing</span>
+</div>
+<span class="font-label-xs text-secondary">16%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Material & Equipment Row (Side-by-Side as requested) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-title-sm text-title-sm text-on-surface">Material Intelligence</h2>
+<button class="text-primary font-label-xs text-label-xs font-semibold hover:underline">View All</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/50 border border-surface-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]" data-icon="inventory">inventory</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm font-semibold text-on-surface">Cement (OPC 53)</div>
+<div class="text-[10px] text-secondary">Current Stock: 120 MT</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label-xs text-error font-bold">4 days left</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/50 border border-surface-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]" data-icon="water_drop">water_drop</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm font-semibold text-on-surface">Steel (TMT 12mm)</div>
+<div class="text-[10px] text-secondary">Current Stock: 45 MT</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label-xs text-error font-bold">2 days left</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/50 border border-surface-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]" data-icon="landscape">landscape</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm font-semibold text-on-surface">Sand (River)</div>
+<div class="text-[10px] text-secondary">Current Stock: 320 m³</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label-xs text-amber-600 font-bold">7 days left</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-title-sm text-title-sm text-on-surface">Equipment Utilization</h2>
+<button class="flex items-center gap-1 bg-surface-container-low px-3 py-1 rounded-full text-label-xs font-semibold text-on-surface border border-surface-variant">
+                        This Week <span class="material-symbols-outlined text-[16px]" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between items-center mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Tower Crane #1</span>
+</div>
+<span class="font-label-xs text-[11px] text-secondary font-bold">78%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-green-600 h-full rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="minor_crash">minor_crash</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Excavator #4</span>
+</div>
+<span class="font-label-xs text-[11px] text-secondary font-bold">46%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-amber-500 h-full rounded-full" style="width: 46%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary" data-icon="conveyor_belt">conveyor_belt</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Concrete Mixer #2</span>
+</div>
+<span class="font-label-xs text-[11px] text-secondary font-bold">62%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5">
+<div class="bg-green-600 h-full rounded-full" style="width: 62%"></div>
+</div>
+</div>
+</div>
+<button class="mt-6 text-primary font-label-xs text-label-xs font-semibold hover:underline flex items-center gap-1">
+                        View All Equipment <span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Logs Table Row -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant overflow-hidden">
+<div class="p-6 flex flex-wrap justify-between items-center gap-4">
+<h2 class="font-title-sm text-title-sm text-on-surface">Recent Logs &amp; Activities</h2>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-secondary" data-icon="search">search</span>
+<input class="pl-9 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-sm focus:ring-2 focus:ring-primary w-48 md:w-64" placeholder="Search logs..." type="text"/>
+</div>
+<button class="flex items-center gap-2 bg-surface-container-low border border-surface-variant px-3 py-2 rounded-full text-label-xs font-semibold text-on-surface hover:bg-surface-variant transition-colors">
+                                Filter <span class="material-symbols-outlined text-[16px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto w-full custom-scrollbar">
+<table class="w-full text-left border-collapse whitespace-nowrap">
+<thead>
+<tr class="bg-surface-container-low border-y border-surface-variant text-secondary font-label-xs text-label-xs tracking-wider">
+<th class="p-4 pl-6 w-10"><input class="rounded text-primary focus:ring-primary w-4 h-4" type="checkbox"/></th>
+<th class="p-4 font-medium uppercase">Log ID</th>
+<th class="p-4 font-medium uppercase">Activity</th>
+<th class="p-4 font-medium uppercase">Value</th>
+<th class="p-4 font-medium uppercase">Status</th>
+<th class="p-4 font-medium uppercase">Date</th>
+<th class="p-4 pr-6"></th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-surface-variant">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-4 pl-6"><input class="rounded text-primary focus:ring-primary w-4 h-4" type="checkbox"/></td>
+<td class="p-4 font-medium text-secondary">LOG_00984</td>
+<td class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]" data-icon="engineering">engineering</span></div>
+                                            Concrete Pouring - Block A
+                                        </td>
+<td class="p-4">$25,500</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-100">
+<div class="w-1.5 h-1.5 rounded-full bg-green-600"></div> Completed
+                                            </span>
+</td>
+<td class="p-4 text-secondary">17 Apr, 15:45</td>
+<td class="p-4 pr-6 text-right">
+<button class="text-secondary hover:text-on-surface"><span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="p-4 pl-6"><input class="rounded text-primary focus:ring-primary w-4 h-4" type="checkbox"/></td>
+<td class="p-4 font-medium text-secondary">LOG_00983</td>
+<td class="p-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-secondary"><span class="material-symbols-outlined text-[18px]" data-icon="local_shipping">local_shipping</span></div>
+                                            Steel Rebar Delivery
+                                        </td>
+<td class="p-4">$32,750</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-error text-[10px] font-bold border border-outline-variant">
+<div class="w-1.5 h-1.5 rounded-full bg-error"></div> Pending
+                                            </span>
+</td>
+<td class="p-4 text-secondary">15 Apr, 11:30</td>
+<td class="p-4 pr-6 text-right">
+<button class="text-secondary hover:text-on-surface"><span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Sidebar Column -->
+<div class="col-span-12 xl:col-span-4 space-y-card-gap">
+<!-- Budget Overview Card -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-label-xs text-label-xs text-secondary uppercase tracking-wider">Budget Balance</h3>
+<div class="font-display-lg text-display-lg text-on-surface mt-2">$2,489,372</div>
+<div class="flex items-center gap-1 mt-2 text-[11px]">
+<span class="text-green-600 font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]" data-icon="arrow_upward">arrow_upward</span> 12%
+                                    </span>
+<span class="text-secondary">vs last month</span>
+</div>
+</div>
+<button class="flex items-center gap-1 bg-surface-container-low px-3 py-1.5 rounded-full text-label-xs font-semibold text-on-surface border border-surface-variant">
+                                USD <span class="material-symbols-outlined text-[16px]" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-primary text-on-primary font-body-sm text-body-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+                                Allocate
+                            </button>
+<button class="bg-surface-container-low text-on-surface border border-surface-variant font-body-sm text-body-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="receipt_long">receipt_long</span>
+                                Request PO
+                            </button>
+</div>
+</div>
+<!-- Critical Site Issues -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-3">
+<h3 class="font-title-sm text-title-sm text-on-surface">Critical Site Issues</h3>
+<span class="px-2 py-0.5 rounded-full bg-error-container/20 text-error text-[10px] font-bold uppercase tracking-wider border-error-container/30">Active Alerts</span>
+</div>
+<button class="text-primary font-label-xs text-label-xs font-semibold hover:underline">View Full Log</button>
+</div>
+<div class="space-y-4">
+<!-- Urgent Priority Item -->
+<div class="group relative flex gap-4 p-4 rounded-lg bg-surface-container-low/50 border border-surface-variant/30 hover:shadow-sm transition-all">
+<div class="w-10 h-10 rounded-full bg-error-container/30 text-error flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px] fill" data-icon="water_drop">water_drop</span>
+</div>
+<div class="min-w-0 flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-title-sm text-[14px] font-semibold text-on-surface truncate">Water Pipe Leak - Sector B</h4>
+<span class="text-[10px] text-secondary font-medium">2h ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1 line-clamp-2">Excavation hit main line. Halting all works in immediate area.</p>
+<div class="mt-3 flex items-center justify-between">
+<span class="text-[10px] text-error font-bold uppercase tracking-wider">Urgent Priority</span>
+<button class="text-primary font-label-xs text-label-xs font-semibold hover:underline">Resolve</button>
+</div>
+</div>
+</div>
+<!-- High Priority Item -->
+<div class="group relative flex gap-4 p-4 rounded-lg bg-surface-container-low/50 border border-surface-variant/30 hover:shadow-sm transition-all">
+<div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px] fill" data-icon="electrical_services">electrical_services</span>
+</div>
+<div class="min-w-0 flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-title-sm text-[14px] font-semibold text-on-surface truncate">Generator 2 Failure</h4>
+<span class="text-[10px] text-secondary font-medium">5h ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1 line-clamp-2">Awaiting maintenance team arrival. Power outage in tower A.</p>
+<div class="mt-3 flex items-center justify-between">
+<span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider">High Priority</span>
+<button class="text-primary font-label-xs text-label-xs font-semibold hover:underline">View Detail</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Low Stock Inventory -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-surface-variant">
+<h3 class="font-title-sm text-title-sm text-on-surface mb-6">Low Stock Materials</h3>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Portland Cement (Type II)</span>
+<span class="font-label-xs text-[11px] text-error font-bold">15%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-error h-full rounded-full" style="width: 15%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Steel Rebar (Grade 60)</span>
+<span class="font-label-xs text-[11px] text-amber-600 font-bold">28%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-amber-500 h-full rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Safety Helmets (Yellow)</span>
+<span class="font-label-xs text-[11px] text-secondary font-bold">45%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2">
+<div class="bg-secondary h-full rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 py-3 border border-surface-variant rounded-lg text-body-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors">
+                            Manage Inventory
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
