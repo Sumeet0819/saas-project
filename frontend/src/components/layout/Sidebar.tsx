@@ -16,7 +16,8 @@ import {
   Image as ImageIcon,
   Building
 } from 'lucide-react';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { setSidebarOpen } from '../../store/slices/uiSlice';
 
 const navCategories = [
   {
@@ -48,20 +49,21 @@ const navCategories = [
 export default function Sidebar() {
   const pathname = usePathname();
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
+  const dispatch = useAppDispatch();
 
   return (
     <aside className={clsx(
-      "fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ease-in-out flex flex-col bg-white border-r border-gray-100",
+      "fixed top-0 left-0 z-40 h-screen transition-transform duration-300 ease-in-out flex flex-col bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800",
       sidebarOpen ? "w-64 translate-x-0" : "w-20 -translate-x-full md:translate-x-0"
     )}>
       {/* Logo Area */}
       <div className="h-[88px] flex items-center px-6">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center min-w-[32px] h-[32px] bg-white rounded-lg border-2 border-blue-600 text-blue-600">
+          <div className="flex items-center justify-center min-w-[32px] h-[32px] bg-white dark:bg-gray-800 rounded-lg border-2 border-primary text-primary transition-colors">
             <Building size={18} strokeWidth={2.5} />
           </div>
           <div className={clsx("flex flex-col overflow-hidden transition-all duration-300", !sidebarOpen && "hidden")}>
-            <span className="text-gray-900 font-bold text-xl leading-tight tracking-tight">CivilSaaS</span>
+            <span className="text-gray-900 dark:text-white font-bold text-xl leading-tight tracking-tight">CivilSaaS</span>
           </div>
         </div>
       </div>
@@ -83,11 +85,16 @@ export default function Sidebar() {
                     <li key={item.href}>
                       <Link 
                         href={item.href} 
+                        onClick={() => {
+                          if (window.innerWidth < 768) {
+                            dispatch(setSidebarOpen(false));
+                          }
+                        }}
                         className={clsx(
                           "flex items-center px-3 py-2.5 rounded-xl transition-all font-medium group",
                           isActive 
-                            ? "bg-blue-600 text-white shadow-md shadow-blue-600/20" 
-                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                            : "text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
                         )}
                         title={!sidebarOpen ? item.label : undefined}
                       >
@@ -119,7 +126,7 @@ export default function Sidebar() {
             Discover the benefits of an upgraded account
           </p>
           
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-600/20">
+          <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/20">
             Upgrade $30
           </button>
         </div>

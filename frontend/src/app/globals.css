@@ -10,6 +10,8 @@
 }
 
 @theme inline {
+  --color-gray-900: #1c1c1c;
+  --color-gray-800: #2a2a2a;
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -53,11 +55,11 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: #F4F7FB;
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
@@ -88,11 +90,11 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #1c1c1c;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: #1c1c1c;
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: #1c1c1c;
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -119,6 +121,52 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Color Themes */
+[data-theme="blue"] {
+  --primary: oklch(0.446 0.222 258.125);
+  --primary-foreground: oklch(0.985 0 0);
+}
+.dark[data-theme="blue"] {
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+}
+
+[data-theme="rose"] {
+  --primary: oklch(0.505 0.213 27.518);
+  --primary-foreground: oklch(0.985 0 0);
+}
+.dark[data-theme="rose"] {
+  --primary: oklch(0.606 0.222 25.431);
+  --primary-foreground: oklch(0.985 0 0);
+}
+
+[data-theme="emerald"] {
+  --primary: oklch(0.598 0.195 168.68);
+  --primary-foreground: oklch(0.985 0 0);
+}
+.dark[data-theme="emerald"] {
+  --primary: oklch(0.697 0.169 165.733);
+  --primary-foreground: oklch(0.985 0 0);
+}
+
+[data-theme="amber"] {
+  --primary: oklch(0.666 0.17 63.855);
+  --primary-foreground: oklch(0.205 0 0);
+}
+.dark[data-theme="amber"] {
+  --primary: oklch(0.767 0.162 70.923);
+  --primary-foreground: oklch(0.205 0 0);
+}
+
+[data-theme="violet"] {
+  --primary: oklch(0.432 0.232 292.759);
+  --primary-foreground: oklch(0.985 0 0);
+}
+.dark[data-theme="violet"] {
+  --primary: oklch(0.537 0.232 291.802);
+  --primary-foreground: oklch(0.985 0 0);
 }
 
 @layer base {

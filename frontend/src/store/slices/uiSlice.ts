@@ -3,13 +3,17 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface UIState {
   sidebarOpen: boolean;
   theme: 'light' | 'dark';
+  colorTheme: string;
   activeProjectId: string | null;
+  preferencesOpen: boolean;
 }
 
 const initialState: UIState = {
   sidebarOpen: true,
-  theme: 'dark', // default to dark as per requirements
+  theme: 'light', 
+  colorTheme: 'blue',
   activeProjectId: null,
+  preferencesOpen: false,
 };
 
 export const uiSlice = createSlice({
@@ -24,11 +28,18 @@ export const uiSlice = createSlice({
     },
     toggleTheme: (state) => {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
-      // Side effect for document is better handled in a hook or listener, 
-      // but we store the state here.
     },
     setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
       state.theme = action.payload;
+    },
+    setColorTheme: (state, action: PayloadAction<string>) => {
+      state.colorTheme = action.payload;
+    },
+    togglePreferences: (state) => {
+      state.preferencesOpen = !state.preferencesOpen;
+    },
+    setPreferencesOpen: (state, action: PayloadAction<boolean>) => {
+      state.preferencesOpen = action.payload;
     },
     setActiveProject: (state, action: PayloadAction<string | null>) => {
       state.activeProjectId = action.payload;
@@ -36,6 +47,15 @@ export const uiSlice = createSlice({
   },
 });
 
-export const { toggleSidebar, setSidebarOpen, toggleTheme, setTheme, setActiveProject } = uiSlice.actions;
+export const { 
+  toggleSidebar, 
+  setSidebarOpen, 
+  toggleTheme, 
+  setTheme, 
+  setColorTheme,
+  togglePreferences,
+  setPreferencesOpen,
+  setActiveProject 
+} = uiSlice.actions;
 
 export default uiSlice.reducer;

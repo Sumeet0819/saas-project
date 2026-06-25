@@ -3,7 +3,7 @@
 import React from 'react';
 import { Menu, Search, Bell, Settings } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { toggleSidebar } from '../../store/slices/uiSlice';
+import { toggleSidebar, togglePreferences } from '../../store/slices/uiSlice';
 
 export default function Header() {
   const dispatch = useAppDispatch();
@@ -13,7 +13,7 @@ export default function Header() {
     <header className="h-20 bg-transparent flex items-center justify-between px-4 lg:px-8 z-30 sticky top-0">
       <div className="flex items-center h-full">
         <button 
-          className="md:hidden flex items-center justify-center p-2 bg-white shadow-sm text-gray-500 hover:text-gray-900 rounded-xl mr-4" 
+          className="flex items-center justify-center p-2 bg-white dark:bg-gray-800 shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl mr-4 transition-colors" 
           onClick={() => dispatch(toggleSidebar())}
           aria-label="Toggle Sidebar"
         >
@@ -22,20 +22,24 @@ export default function Header() {
       </div>
       
       <div className="flex items-center space-x-3 sm:space-x-5">
-        <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-900 transition-colors" aria-label="Search">
+        <button className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="Search">
           <Search size={18} strokeWidth={2.5} />
         </button>
         
-        <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-900 transition-colors relative" aria-label="Notifications">
+        <button className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors relative" aria-label="Notifications">
           <Bell size={18} strokeWidth={2.5} />
-          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
         </button>
 
-        <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:flex" aria-label="Settings">
+        <button 
+          onClick={() => dispatch(togglePreferences())}
+          className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors hidden sm:flex" 
+          aria-label="Settings"
+        >
           <Settings size={18} strokeWidth={2.5} />
         </button>
         
-        <div className="hidden sm:block w-px h-8 bg-gray-200 mx-2"></div>
+        <div className="hidden sm:block w-px h-8 bg-gray-200 dark:bg-gray-800 mx-2"></div>
         
         <button className="flex items-center space-x-3 group outline-none">
           <img 
@@ -44,8 +48,8 @@ export default function Header() {
             className="w-10 h-10 rounded-full object-cover shadow-sm group-hover:ring-2 group-hover:ring-blue-500/50 transition-all" 
           />
           <div className="hidden md:flex flex-col items-start text-left">
-            <span className="text-sm font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">{user?.full_name || 'Sajibur Rahman'}</span>
-            <span className="text-xs font-medium text-gray-500">{user?.role || 'Project Manager'}</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight group-hover:text-primary dark:group-hover:text-primary transition-colors">{user?.full_name || 'Sajibur Rahman'}</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.role || 'Project Manager'}</span>
           </div>
         </button>
       </div>

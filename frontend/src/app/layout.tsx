@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Hanken_Grotesk, Geist } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import StoreProvider from "./StoreProvider";
+import ThemeProvider from "../components/layout/ThemeProvider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -21,17 +22,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="light" className={cn(inter.variable, hankenGrotesk.variable, "font-sans", geist.variable)}>
-      <body>
+    <html lang="en" suppressHydrationWarning className={cn(inter.variable, hankenGrotesk.variable, "font-sans", geist.variable)}>
+      <body suppressHydrationWarning>
         <StoreProvider>
-          <div id="root">
-            {children}
-            <Toaster position="top-right" />
-          </div>
+          <ThemeProvider>
+            <div id="root">
+              {children}
+              <Toaster position="top-right" />
+            </div>
+          </ThemeProvider>
         </StoreProvider>
       </body>
     </html>
   );
 }
-
-
