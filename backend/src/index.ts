@@ -33,6 +33,8 @@ import siteActivityRoutes from './routes/siteActivityRoutes';
 import siteIssueRoutes from './routes/siteIssueRoutes';
 import sitePhotoRoutes from './routes/sitePhotoRoutes';
 import supplierRoutes from './routes/supplierRoutes';
+import organizationRoutes from './routes/organizationRoutes';
+import userRoutes from './routes/userRoutes';
 import { requireAuth } from './middlewares/auth';
 
 // Basic health check endpoint
@@ -42,6 +44,8 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/organizations', organizationRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/daily-logs', dailyLogRoutes);
 app.use('/api/v1/workers', workerRoutes);

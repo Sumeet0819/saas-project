@@ -5,6 +5,7 @@ interface UIState {
   theme: 'light' | 'dark';
   colorTheme: string;
   activeProjectId: string | null;
+  activeOrganizationId: string | null;
   preferencesOpen: boolean;
 }
 
@@ -13,6 +14,7 @@ const initialState: UIState = {
   theme: 'light', 
   colorTheme: 'blue',
   activeProjectId: null,
+  activeOrganizationId: null,
   preferencesOpen: false,
 };
 
@@ -44,6 +46,9 @@ export const uiSlice = createSlice({
     setActiveProject: (state, action: PayloadAction<string | null>) => {
       state.activeProjectId = action.payload;
     },
+    setActiveOrganization: (state, action: PayloadAction<string | null>) => {
+      state.activeOrganizationId = action.payload;
+    },
   },
 });
 
@@ -55,7 +60,8 @@ export const {
   setColorTheme,
   togglePreferences,
   setPreferencesOpen,
-  setActiveProject 
+  setActiveProject,
+  setActiveOrganization
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

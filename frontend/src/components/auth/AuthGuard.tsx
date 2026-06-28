@@ -6,6 +6,7 @@ import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { supabase } from '../../services/supabaseClient';
 import { setCredentials, logout } from '../../store/slices/authSlice';
 import api from '../../services/api';
+import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isChecking) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-(--bg-primary)">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-(--accent-primary)"></div>
+        <ConstructionLoader size="lg" />
       </div>
     );
   }

@@ -1,13 +1,31 @@
 'use client';
 
-import React from 'react';
-import { Menu, Search, Bell, Settings } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Menu, Search, Bell, Settings, Building2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { toggleSidebar, togglePreferences } from '../../store/slices/uiSlice';
+import { toggleSidebar, togglePreferences, setActiveOrganization } from '../../store/slices/uiSlice';
+import { fetchOrganizations } from '../../store/slices/organizationsSlice';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Header() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { activeOrganizationId } = useAppSelector((state) => state.ui);
+  const { organizations, status: orgStatus } = useAppSelector((state) => state.organizations);
+
+  useEffect(() => {
+    if (orgStatus === 'idle') {
+      dispatch(fetchOrganizations());
+    }
+  }, [orgStatus, dispatch]);
+
+  useEffect(() => {
+    if (organizations.length > 0 && !activeOrganizationId) {
+      // Default to user's organization if available, or the first one
+      const userOrg = organizations.find(o => o.id === user?.organization_id);
+      dispatch(setActiveOrganization(userOrg ? userOrg.id : organizations[0].id));
+    }
+  }, [organizations, user, activeOrganizationId, dispatch]);
 
   return (
     <header className="h-20 bg-transparent flex items-center justify-between px-4 lg:px-8 z-30 sticky top-0">
@@ -19,6 +37,23 @@ export default function Header() {
         >
           <Menu size={20} />
         </button>
+
+        <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <Building2 size={16} className="text-gray-400" />
+          <Select 
+            value={activeOrganizationId || ''}
+            onValueChange={(val) => dispatch(setActiveOrganization(val))}
+          >
+            <SelectTrigger className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-0 h-auto p-0 min-w-[150px] shadow-none data-[state=open]:bg-transparent">
+              <SelectValue placeholder={organizations.length === 0 ? "Loading..." : "Select Organization"} />
+            </SelectTrigger>
+            <SelectContent>
+              {organizations.map(org => (
+                <SelectItem key={org.id} value={org.name}>{org.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex items-center space-x-3 sm:space-x-5">
@@ -43,13 +78,13 @@ export default function Header() {
         
         <button className="flex items-center space-x-3 group outline-none">
           <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSubHI-QwbO-uFuCN2iZ6P7r0HLhScutsjb_I_Uq5Y8VHxtDNbPC7Mw6dizCxI5YpwtTlRcb7En2lTGtgtEtMb_JT5U6qJX5hFaX7F8vbdE8Y86Jgn-zKph5QaKKLRHEKeNCK4qX5qsUxGSeSMuaf_a2SVPGSs7Cl1H0TdfTw6nM2IJEa9fD8WYuB5NsaIT0QxRJlisXW0HN-OFnAeH9m6SG_R7upSUKepl7-cnTn1UjVtTUsA5vWVgoL7S8EL8HsrKOyahl5Zslyo" 
+            src={user?.profile_photo || "https://lh3.googleusercontent.com/aida-public/AB6AXuCSubHI-QwbO-uFuCN2iZ6P7r0HLhScutsjb_I_Uq5Y8VHxtDNbPC7Mw6dizCxI5YpwtTlRcb7En2lTGtgtEtMb_JT5U6qJX5hFaX7F8vbdE8Y86Jgn-zKph5QaKKLRHEKeNCK4qX5qsUxGSeSMuaf_a2SVPGSs7Cl1H0TdfTw6nM2IJEa9fD8WYuB5NsaIT0QxRJlisXW0HN-OFnAeH9m6SG_R7upSUKepl7-cnTn1UjVtTUsA5vWVgoL7S8EL8HsrKOyahl5Zslyo"} 
             alt="Profile" 
             className="w-10 h-10 rounded-full object-cover shadow-sm group-hover:ring-2 group-hover:ring-blue-500/50 transition-all" 
           />
           <div className="hidden md:flex flex-col items-start text-left">
-            <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight group-hover:text-primary dark:group-hover:text-primary transition-colors">{user?.full_name || 'Sajibur Rahman'}</span>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.role || 'Project Manager'}</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight group-hover:text-primary dark:group-hover:text-primary transition-colors">{user?.full_name || 'Admin User'}</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.role || 'System Admin'}</span>
           </div>
         </button>
       </div>

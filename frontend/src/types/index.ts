@@ -1,4 +1,16 @@
+export interface Organization {
+  id: string;
+  name: string;
+  logo?: string;
+  gst_number?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  created_at: string;
+}
+
 export type UserRole = 'Admin' | 'Project Manager' | 'Site Engineer' | 'Contractor' | 'Supplier';
+
 
 export interface User {
   id: string;

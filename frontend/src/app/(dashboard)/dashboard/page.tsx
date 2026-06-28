@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useAppSelector } from '../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchProjects } from '../../../store/slices/projectsSlice';
+import { fetchWorkers } from '../../../store/slices/workersSlice';
 import { 
   Building2, Users, AlertTriangle, Box, 
   ChevronDown, ArrowUp, Briefcase, HardHat,
@@ -38,7 +40,30 @@ const itemVariants: Variants = {
 };
 
 export default function DashboardPage() {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { activeOrganizationId } = useAppSelector((state) => state.ui);
+  
+  const { projects, status: projectsStatus } = useAppSelector((state) => state.projects);
+  const { workers, status: workersStatus } = useAppSelector((state) => state.workers);
+
+  React.useEffect(() => {
+    if (projectsStatus === 'idle') dispatch(fetchProjects());
+    if (workersStatus === 'idle') dispatch(fetchWorkers());
+  }, [projectsStatus, workersStatus, dispatch]);
+
+  const orgProjects = React.useMemo(() => {
+    if (!activeOrganizationId) return [];
+    return projects.filter(p => p.organization_id === activeOrganizationId);
+  }, [projects, activeOrganizationId]);
+
+  const orgWorkers = React.useMemo(() => {
+    if (!activeOrganizationId) return [];
+    return workers.filter(w => w.organization_id === activeOrganizationId);
+  }, [workers, activeOrganizationId]);
+
+  const activeProjectsCount = orgProjects.filter(p => p.status === 'Active').length;
+  const totalWorkforce = orgWorkers.length;
 
   const currentDate = new Intl.DateTimeFormat('en-US', { 
     weekday: 'long', 
@@ -64,7 +89,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
         
         {/* Primary Card */}
-        <motion.div variants={itemVariants} whileHover={{ y: -5, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.2)" }} className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-5 text-primary-foreground shadow-lg flex flex-col justify-between group">
+        <motion.div variants={itemVariants} whileHover={{ y: -5, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.2)" }} className="relative overflow-hidden bg-linear-to-br from-primary to-primary/80 rounded-2xl p-5 text-primary-foreground shadow-lg flex flex-col justify-between group">
           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500"></div>
           <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white/10 opacity-20 blur-xl"></div>
           <div className="relative z-10 flex justify-between items-start mb-4">
@@ -78,7 +103,7 @@ export default function DashboardPage() {
           <div className="relative z-10">
             <div className="text-xs text-primary-foreground/80 font-medium mb-1">Total Active Projects</div>
             <div className="flex items-end gap-2">
-              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="text-[28px] font-bold leading-none tracking-tight">12</motion.div>
+              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="text-[28px] font-bold leading-none tracking-tight">{activeProjectsCount}</motion.div>
               <div className="text-[10px] text-primary-foreground/60 mb-1 font-medium">vs last month</div>
             </div>
           </div>
@@ -97,7 +122,7 @@ export default function DashboardPage() {
           <div>
             <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Workforce</div>
             <div className="flex items-end gap-2">
-              <div className="text-[28px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">348</div>
+              <div className="text-[28px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">{totalWorkforce}</div>
               <div className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 font-medium">vs last month</div>
             </div>
           </div>
@@ -312,7 +337,7 @@ export default function DashboardPage() {
               <motion.circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" className="text-primary/40" strokeWidth="6" strokeLinecap="round" strokeDasharray="163.4" initial={{ strokeDashoffset: 163.4 }} animate={{ strokeDashoffset: 163.4 - (163.4 * 0.4) }} transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">348</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">{totalWorkforce}</span>
               <span className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Workers</span>
             </div>
           </div>
@@ -548,7 +573,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="relative w-32 h-32 flex-shrink-0 mt-2">
+          <div className="relative w-32 h-32 shrink-0 mt-2">
             <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
               <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-border, #f1f5f9)" strokeWidth="10" strokeLinecap="round" />
               <motion.circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" className="text-primary" strokeWidth="10" strokeLinecap="round" strokeDasharray="251.2" initial={{ strokeDashoffset: 251.2 }} animate={{ strokeDashoffset: 251.2 - (251.2 * 0.68) }} transition={{ duration: 1.5, ease: "easeOut" }} />

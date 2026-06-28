@@ -9,6 +9,7 @@ import { useGetDailyLogsQuery } from '../../../store/api/logsApi';
 import { DailyLog } from '../../../types';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
+import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
 
 export default function DailyLogsPage() {
   const { data: logs, isLoading, error } = useGetDailyLogsQuery({});
@@ -80,7 +81,7 @@ export default function DailyLogsPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <ConstructionLoader size="md" />
         </div>
       ) : error ? (
         <div className="text-destructive p-4 text-center bg-destructive/10 rounded-xl max-w-md mx-auto mt-12 border border-destructive/20">
@@ -143,7 +144,7 @@ function LogCard({ log }: { log: DailyLog }) {
           </div>
         </div>
         
-        <p className="text-sm text-gray-700 dark:text-gray-300 flex-grow leading-relaxed">
+        <p className="text-sm text-gray-700 dark:text-gray-300 grow leading-relaxed">
           {log.progress_update || <span className="italic text-gray-400">No progress update provided.</span>}
         </p>
 
@@ -167,7 +168,7 @@ function LogCard({ log }: { log: DailyLog }) {
 function LogListItem({ log }: { log: DailyLog }) {
   return (
     <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm items-start md:items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-      <div className="flex-shrink-0 w-40">
+      <div className="shrink-0 w-40">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-gray-900 dark:text-white">
             {new Date(log.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -175,10 +176,10 @@ function LogListItem({ log }: { log: DailyLog }) {
           <span className="text-[10px] uppercase text-gray-500 font-bold mt-0.5 tracking-wider">PRJ: {log.project_id.substring(0,8)}</span>
         </div>
       </div>
-      <div className="flex-grow">
+      <div className="grow">
         <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed">{log.progress_update}</p>
       </div>
-      <div className="flex-shrink-0 min-w-[120px] text-right">
+      <div className="shrink-0 min-w-[120px] text-right">
         {log.photo_link ? (
           <Button variant="secondary" size="sm" className="h-8 w-full bg-blue-50 text-blue-600 hover:bg-blue-100 border-none">
             <ImageIcon size={14} className="mr-2" />
