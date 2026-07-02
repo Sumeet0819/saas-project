@@ -32,7 +32,7 @@ export const createWorker = createAsyncThunk('workers/createWorker', async (body
 });
 
 export const updateWorker = createAsyncThunk('workers/updateWorker', async ({ id, body }: { id: string; body: Partial<Worker> }) => {
-  const response = await apiClient.put(`/workers/${id}`, body);
+  const response = await apiClient.patch(`/workers/${id}`, body);
   return response.data;
 });
 

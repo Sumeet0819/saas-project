@@ -25,7 +25,7 @@ export const createMaterialMaster = createAsyncThunk('materialMaster/create', as
 });
 
 export const updateMaterialMaster = createAsyncThunk('materialMaster/update', async ({ id, data }: { id: string; data: Partial<MaterialMaster> }) => {
-  const response = await apiClient.put(`/material-master/${id}`, data);
+  const response = await apiClient.patch(`/material-master/${id}`, data);
   return response.data;
 });
 

@@ -45,11 +45,13 @@ export default function Header() {
             onValueChange={(val) => dispatch(setActiveOrganization(val))}
           >
             <SelectTrigger className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-0 h-auto p-0 min-w-[150px] shadow-none data-[state=open]:bg-transparent">
-              <SelectValue placeholder={organizations.length === 0 ? "Loading..." : "Select Organization"} />
+              <SelectValue placeholder={organizations.length === 0 ? "Loading..." : "Select Organization"}>
+                {organizations.find(org => org.id === activeOrganizationId)?.name || (organizations.length === 0 ? "Loading..." : "Select Organization")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {organizations.map(org => (
-                <SelectItem key={org.id} value={org.name}>{org.name}</SelectItem>
+                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

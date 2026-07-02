@@ -32,7 +32,7 @@ export const createProject = createAsyncThunk('projects/createProject', async (b
 });
 
 export const updateProject = createAsyncThunk('projects/updateProject', async ({ id, body }: { id: string; body: Partial<Project> }) => {
-  const response = await apiClient.put(`/projects/${id}`, body);
+  const response = await apiClient.patch(`/projects/${id}`, body);
   return response.data;
 });
 

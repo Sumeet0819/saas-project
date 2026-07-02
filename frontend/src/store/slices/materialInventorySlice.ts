@@ -25,7 +25,7 @@ export const fetchInventoryByProject = createAsyncThunk('materialInventory/fetch
 });
 
 export const updateInventoryStock = createAsyncThunk('materialInventory/updateStock', async ({ id, data }: { id: string; data: Partial<MaterialInventory> }) => {
-  const response = await apiClient.put(`/material-inventory/${id}`, data);
+  const response = await apiClient.patch(`/material-inventory/${id}`, data);
   return response.data;
 });
 
