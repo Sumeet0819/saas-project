@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 import { MaterialRequest } from '../../types';
 
 interface MaterialRequestsState {
@@ -15,22 +15,22 @@ const initialState: MaterialRequestsState = {
 };
 
 export const fetchMaterialRequests = createAsyncThunk('materialRequests/fetchAll', async () => {
-  const response = await apiClient.get('/material-requests');
+  const response = await api.get('/material-requests');
   return response.data;
 });
 
 export const createMaterialRequest = createAsyncThunk('materialRequests/create', async (data: Partial<MaterialRequest>) => {
-  const response = await apiClient.post('/material-requests', data);
+  const response = await api.post('/material-requests', data);
   return response.data;
 });
 
 export const updateMaterialRequest = createAsyncThunk('materialRequests/update', async ({ id, data }: { id: string; data: Partial<MaterialRequest> }) => {
-  const response = await apiClient.patch(`/material-requests/${id}`, data);
+  const response = await api.patch(`/material-requests/${id}`, data);
   return response.data;
 });
 
 export const deleteMaterialRequest = createAsyncThunk('materialRequests/delete', async (id: string) => {
-  await apiClient.delete(`/material-requests/${id}`);
+  await api.delete(`/material-requests/${id}`);
   return id;
 });
 

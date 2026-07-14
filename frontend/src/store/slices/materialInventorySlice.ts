@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 import { MaterialInventory } from '../../types';
 
 interface MaterialInventoryState {
@@ -15,22 +15,22 @@ const initialState: MaterialInventoryState = {
 };
 
 export const fetchMaterialInventory = createAsyncThunk('materialInventory/fetchAll', async () => {
-  const response = await apiClient.get('/material-inventory');
+  const response = await api.get('/material-inventory');
   return response.data;
 });
 
 export const fetchInventoryByProject = createAsyncThunk('materialInventory/fetchByProject', async (projectId: string) => {
-  const response = await apiClient.get(`/material-inventory?project_id=${projectId}`);
+  const response = await api.get(`/material-inventory?project_id=${projectId}`);
   return response.data;
 });
 
 export const updateInventoryStock = createAsyncThunk('materialInventory/updateStock', async ({ id, data }: { id: string; data: Partial<MaterialInventory> }) => {
-  const response = await apiClient.patch(`/material-inventory/${id}`, data);
+  const response = await api.patch(`/material-inventory/${id}`, data);
   return response.data;
 });
 
 export const createMaterialInventory = createAsyncThunk('materialInventory/create', async (data: Partial<MaterialInventory>) => {
-  const response = await apiClient.post('/material-inventory', data);
+  const response = await api.post('/material-inventory', data);
   return response.data;
 });
 

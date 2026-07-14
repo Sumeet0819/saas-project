@@ -60,7 +60,7 @@ export default function LoginPage() {
             email: email || '',
             full_name: user_metadata?.full_name || '',
             role: user_metadata?.role || 'Guest',
-          },
+          } as any,
           token: authData.session.access_token
         }));
         

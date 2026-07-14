@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from './api/apiSlice';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
-import { injectStore } from './apiClient';
+import { injectStore } from '../services/api';
 
 import organizationsReducer from './slices/organizationsSlice';
 import usersReducer from './slices/usersSlice';

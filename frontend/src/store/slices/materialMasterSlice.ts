@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 import { MaterialMaster } from '../../types';
 
 interface MaterialMasterState {
@@ -15,22 +15,22 @@ const initialState: MaterialMasterState = {
 };
 
 export const fetchMaterialMaster = createAsyncThunk('materialMaster/fetchAll', async () => {
-  const response = await apiClient.get('/material-master');
+  const response = await api.get('/material-master');
   return response.data;
 });
 
 export const createMaterialMaster = createAsyncThunk('materialMaster/create', async (material: Partial<MaterialMaster>) => {
-  const response = await apiClient.post('/material-master', material);
+  const response = await api.post('/material-master', material);
   return response.data;
 });
 
 export const updateMaterialMaster = createAsyncThunk('materialMaster/update', async ({ id, data }: { id: string; data: Partial<MaterialMaster> }) => {
-  const response = await apiClient.patch(`/material-master/${id}`, data);
+  const response = await api.patch(`/material-master/${id}`, data);
   return response.data;
 });
 
 export const deleteMaterialMaster = createAsyncThunk('materialMaster/delete', async (id: string) => {
-  await apiClient.delete(`/material-master/${id}`);
+  await api.delete(`/material-master/${id}`);
   return id;
 });
 

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Organization } from '../../types';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 
 interface OrganizationsState {
   organizations: Organization[];
@@ -17,27 +17,27 @@ const initialState: OrganizationsState = {
 };
 
 export const fetchOrganizations = createAsyncThunk('organizations/fetchOrganizations', async () => {
-  const response = await apiClient.get('/organizations');
+  const response = await api.get('/organizations');
   return response.data;
 });
 
 export const fetchOrganizationById = createAsyncThunk('organizations/fetchOrganizationById', async (id: string) => {
-  const response = await apiClient.get(`/organizations/${id}`);
+  const response = await api.get(`/organizations/${id}`);
   return response.data;
 });
 
 export const createOrganization = createAsyncThunk('organizations/createOrganization', async (body: Partial<Organization>) => {
-  const response = await apiClient.post('/organizations', body);
+  const response = await api.post('/organizations', body);
   return response.data;
 });
 
 export const updateOrganization = createAsyncThunk('organizations/updateOrganization', async ({ id, body }: { id: string; body: Partial<Organization> }) => {
-  const response = await apiClient.put(`/organizations/${id}`, body);
+  const response = await api.put(`/organizations/${id}`, body);
   return response.data;
 });
 
 export const deleteOrganization = createAsyncThunk('organizations/deleteOrganization', async (id: string) => {
-  await apiClient.delete(`/organizations/${id}`);
+  await api.delete(`/organizations/${id}`);
   return id;
 });
 

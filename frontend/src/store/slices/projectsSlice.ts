@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Project } from '../../types';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 
 interface ProjectsState {
   projects: Project[];
@@ -17,27 +17,27 @@ const initialState: ProjectsState = {
 };
 
 export const fetchProjects = createAsyncThunk('projects/fetchProjects', async () => {
-  const response = await apiClient.get('/projects');
+  const response = await api.get('/projects');
   return response.data;
 });
 
 export const fetchProjectById = createAsyncThunk('projects/fetchProjectById', async (id: string) => {
-  const response = await apiClient.get(`/projects/${id}`);
+  const response = await api.get(`/projects/${id}`);
   return response.data;
 });
 
 export const createProject = createAsyncThunk('projects/createProject', async (body: Partial<Project>) => {
-  const response = await apiClient.post('/projects', body);
+  const response = await api.post('/projects', body);
   return response.data;
 });
 
 export const updateProject = createAsyncThunk('projects/updateProject', async ({ id, body }: { id: string; body: Partial<Project> }) => {
-  const response = await apiClient.patch(`/projects/${id}`, body);
+  const response = await api.patch(`/projects/${id}`, body);
   return response.data;
 });
 
 export const deleteProject = createAsyncThunk('projects/deleteProject', async (id: string) => {
-  await apiClient.delete(`/projects/${id}`);
+  await api.delete(`/projects/${id}`);
   return id;
 });
 

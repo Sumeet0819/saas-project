@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Worker } from '../../types';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 
 interface WorkersState {
   workers: Worker[];
@@ -17,27 +17,27 @@ const initialState: WorkersState = {
 };
 
 export const fetchWorkers = createAsyncThunk('workers/fetchWorkers', async () => {
-  const response = await apiClient.get('/workers');
+  const response = await api.get('/workers');
   return response.data;
 });
 
 export const fetchWorkerById = createAsyncThunk('workers/fetchWorkerById', async (id: string) => {
-  const response = await apiClient.get(`/workers/${id}`);
+  const response = await api.get(`/workers/${id}`);
   return response.data;
 });
 
 export const createWorker = createAsyncThunk('workers/createWorker', async (body: Partial<Worker>) => {
-  const response = await apiClient.post('/workers', body);
+  const response = await api.post('/workers', body);
   return response.data;
 });
 
 export const updateWorker = createAsyncThunk('workers/updateWorker', async ({ id, body }: { id: string; body: Partial<Worker> }) => {
-  const response = await apiClient.patch(`/workers/${id}`, body);
+  const response = await api.patch(`/workers/${id}`, body);
   return response.data;
 });
 
 export const deleteWorker = createAsyncThunk('workers/deleteWorker', async (id: string) => {
-  await apiClient.delete(`/workers/${id}`);
+  await api.delete(`/workers/${id}`);
   return id;
 });
 

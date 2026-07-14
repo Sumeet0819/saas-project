@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 email: email || '',
                 full_name: user_metadata?.full_name || '',
                 role: user_metadata?.role || 'Guest',
-              },
+              } as any,
               token: session.access_token
             }));
           } catch (error) {

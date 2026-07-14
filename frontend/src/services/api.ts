@@ -1,7 +1,12 @@
 import axios from 'axios';
-import { store } from '../store/store';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+
+let storeInstance: any = null;
+
+export const injectStore = (store: any) => {
+  storeInstance = store;
+};
 
 const api = axios.create({
   baseURL: API_URL,
@@ -13,10 +18,14 @@ const api = axios.create({
 // Request interceptor to attach the auth token
 api.interceptors.request.use(
   (config) => {
-    // Get token from Redux store
-    const token = store.getState().auth.token;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (storeInstance) {
+      // Get token from Redux store dynamically
+      const state = storeInstance.getState();
+      const token = state.auth?.token;
+
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -24,6 +33,9 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+
+
 
 // Response interceptor to handle global errors (like 401 Unauthorized)
 api.interceptors.response.use(

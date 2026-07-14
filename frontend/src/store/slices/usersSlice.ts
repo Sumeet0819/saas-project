@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../../types';
-import { apiClient } from '../apiClient';
+import api from '../../services/api';
 
 interface UsersState {
   users: User[];
@@ -17,27 +17,27 @@ const initialState: UsersState = {
 };
 
 export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
-  const response = await apiClient.get('/users');
+  const response = await api.get('/users');
   return response.data;
 });
 
 export const fetchUserById = createAsyncThunk('users/fetchUserById', async (id: string) => {
-  const response = await apiClient.get(`/users/${id}`);
+  const response = await api.get(`/users/${id}`);
   return response.data;
 });
 
 export const createUser = createAsyncThunk('users/createUser', async (body: Partial<User>) => {
-  const response = await apiClient.post('/users', body);
+  const response = await api.post('/users', body);
   return response.data;
 });
 
 export const updateUser = createAsyncThunk('users/updateUser', async ({ id, body }: { id: string; body: Partial<User> }) => {
-  const response = await apiClient.put(`/users/${id}`, body);
+  const response = await api.put(`/users/${id}`, body);
   return response.data;
 });
 
 export const deleteUser = createAsyncThunk('users/deleteUser', async (id: string) => {
-  await apiClient.delete(`/users/${id}`);
+  await api.delete(`/users/${id}`);
   return id;
 });
 
