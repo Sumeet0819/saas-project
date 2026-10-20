@@ -1,28 +1,38 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchMaterialMaster, createMaterialMaster, deleteMaterialMaster, updateMaterialMaster } from '../../../../store/slices/materialMasterSlice';
-import { Plus, Search, Layers, Box, Settings2, Trash2, Edit } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { fetchMaterialMaster, createMaterialMaster, deleteMaterialMaster } from '../../../../store/slices/materialMasterSlice';
+import { Plus, Search, Box, Trash2, ArrowLeft, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
 
+const fade: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 24 } },
+};
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+
 export default function MaterialMasterPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { materials, status } = useAppSelector((state) => state.materialMaster);
   const { user } = useAppSelector((state) => state.auth);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     material_name: '',
     unit: '',
-    minimum_stock_level: 0
+    minimum_stock_level: 0,
   });
 
   useEffect(() => {
@@ -31,181 +41,244 @@ export default function MaterialMasterPage() {
     }
   }, [status, dispatch]);
 
-  const filteredMaterials = materials.filter(m => 
-    m.material_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.unit.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMaterials = (materials || []).filter(
+    (m) =>
+      m.material_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.unit.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.material_name.trim() || !formData.unit.trim()) return;
     await dispatch(createMaterialMaster(formData));
     setIsModalOpen(false);
     setFormData({ material_name: '', unit: '', minimum_stock_level: 0 });
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this material from the master catalog?')) {
+    if (confirm('Are you sure you want to remove this item from the global material catalog?')) {
       await dispatch(deleteMaterialMaster(id));
     }
   };
 
+  const inputCls = "h-9 text-sm bg-white dark:bg-[#1B1E1C] border-[#E6E9E7] dark:border-white/[0.08] rounded-[8px] text-[#171A18] dark:text-[#EFF1F0] placeholder:text-[#929994] focus-visible:border-[#079B68] focus-visible:ring-[#079B68]/20 transition-colors";
+
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full p-4 md:p-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="max-w-[1400px] mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
-            <Layers className="text-primary h-8 w-8" />
-            Material Master
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Global catalog of all materials used across projects.</p>
-        </div>
-        
-        {/* Only admins or managers should typically add to the master catalog */}
-        {(user?.role === 'Admin' || user?.role === 'Project Manager') && (
-          <Button 
-            onClick={() => setIsModalOpen(true)}
-            className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-sm"
+      <motion.div variants={fade} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push('/materials')}
+            className="w-8 h-8 flex items-center justify-center rounded-[7px] border border-[#E6E9E7] dark:border-white/[0.08] bg-white dark:bg-[#1B1E1C] text-[#626A66] hover:bg-[#F5F6F5] hover:text-[#171A18] transition-colors cursor-pointer shadow-[0_1px_2px_rgba(16,24,20,0.06)]"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Material
+            <ArrowLeft size={15} strokeWidth={1.75} />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">Material Catalog</h1>
+            <p className="text-xs text-[#929994] mt-0.5">
+              {(materials || []).length} global master material specifications
+            </p>
+          </div>
+        </div>
+
+        {(user?.role === 'Admin' || user?.role === 'Project Manager') && (
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="h-9 px-4 text-xs font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] shadow-sm gap-1.5 cursor-pointer transition-colors"
+          >
+            <Plus size={14} strokeWidth={2.25} />
+            Add Master Material
           </Button>
         )}
-      </div>
+      </motion.div>
 
       {/* Search */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <motion.div variants={fade} className="flex items-center gap-3 mb-5">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#929994]" strokeWidth={1.75} />
           <Input
-            className="pl-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl w-full focus-visible:ring-primary/20"
-            placeholder="Search material name or unit..."
+            className={`pl-9 ${inputCls}`}
+            placeholder="Search material by name or unit…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-      </div>
+      </motion.div>
 
-      {/* List */}
+      {/* Table list */}
       {status === 'loading' ? (
-        <div className="flex justify-center p-24">
+        <div className="flex justify-center items-center py-24">
           <ConstructionLoader size="md" />
         </div>
+      ) : filteredMaterials.length === 0 ? (
+        <motion.div
+          variants={fade}
+          className="bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] p-12 text-center shadow-[0_1px_4px_rgba(16,24,20,0.06)]"
+        >
+          <div className="w-12 h-12 bg-[#F5F6F5] dark:bg-white/[0.04] rounded-full flex items-center justify-center mx-auto mb-3">
+            <Box size={20} className="text-[#929994]" strokeWidth={1.5} />
+          </div>
+          <p className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0] mb-1">No catalog materials found</p>
+          <p className="text-xs text-[#929994] max-w-sm mx-auto mb-5">
+            {searchTerm ? `No results match "${searchTerm}".` : 'Add standard construction materials to make them available across all project inventories.'}
+          </p>
+          {(user?.role === 'Admin' || user?.role === 'Project Manager') && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="h-8 text-xs bg-[#079B68] hover:bg-[#087A55] text-white rounded-[7px] cursor-pointer"
+            >
+              <Plus size={13} className="mr-1" /> Add Material
+            </Button>
+          )}
+        </motion.div>
       ) : (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] overflow-hidden">
-          {filteredMaterials.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-16">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                <Box className="text-gray-400" size={32} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No materials found</h3>
-              <p className="text-gray-500 text-sm">Create a new material to add it to the global catalog.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
-                    <th className="py-4 px-6">Material Name</th>
-                    <th className="py-4 px-6">Unit of Measurement</th>
-                    <th className="py-4 px-6">Global Min Stock</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50 text-sm">
-                  {filteredMaterials.map((material, i) => (
-                    <motion.tr 
+        <motion.div
+          variants={fade}
+          className="bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] shadow-[0_1px_4px_rgba(16,24,20,0.06)] overflow-hidden"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#E6E9E7] dark:border-white/[0.07] bg-[#F9FAF9] dark:bg-white/[0.02]">
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[#929994]">Material Name</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[#929994]">Unit of Measure</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[#929994]">Default Threshold</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-[#929994] text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E6E9E7] dark:divide-white/[0.05] text-sm">
+                <AnimatePresence>
+                  {filteredMaterials.map((material) => (
+                    <motion.tr
                       key={material.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="hover:bg-[#F9FAF9] dark:hover:bg-white/[0.02] transition-colors"
                     >
-                      <td className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                        {material.material_name}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-[6px] bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] flex items-center justify-center shrink-0">
+                            <Box size={14} className="text-[#079B68]" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-sm text-[#171A18] dark:text-[#EFF1F0]">
+                              {material.material_name}
+                            </span>
+                            <span className="block text-[11px] text-[#929994]">ID: {material.id.slice(0, 8)}</span>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide">
+
+                      <td className="px-5 py-3.5">
+                        <span className="inline-flex px-2 py-0.5 rounded-[5px] bg-[#F5F6F5] dark:bg-white/[0.04] text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0] uppercase tracking-wide border border-[#E6E9E7] dark:border-white/[0.08]">
                           {material.unit}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-gray-600 dark:text-gray-400 font-medium">
-                        {material.minimum_stock_level}
+
+                      <td className="px-5 py-3.5 text-xs text-[#626A66] dark:text-[#9BA49E]">
+                        <span className="font-semibold text-[#171A18] dark:text-[#EFF1F0]">{material.minimum_stock_level}</span> {material.unit}
                       </td>
-                      <td className="py-4 px-6 text-right space-x-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-primary">
-                          <Edit size={16} />
-                        </Button>
+
+                      <td className="px-5 py-3.5 text-right">
                         {(user?.role === 'Admin' || user?.role === 'Project Manager') && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-destructive" onClick={() => handleDelete(material.id)}>
-                            <Trash2 size={16} />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-[#929994] hover:text-[#B85B63] hover:bg-[#F9EDEF] rounded-[6px] cursor-pointer"
+                            onClick={() => handleDelete(material.id)}
+                            title="Delete Material"
+                          >
+                            <Trash2 size={13} />
                           </Button>
                         )}
                       </td>
                     </motion.tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
       )}
 
       {/* Create Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-2xl">
+        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-[#1B1E1C] border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] p-6 shadow-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Settings2 className="text-primary w-5 h-5" />
-              New Master Material
+            <DialogTitle className="text-base font-semibold text-[#171A18] dark:text-[#EFF1F0]">
+              Add Master Material
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="material_name">Material Name</Label>
+
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-[#626A66] dark:text-[#9BA49E]">
+                Material Name <span className="text-[#B85B63]">*</span>
+              </Label>
               <Input
                 id="material_name"
                 placeholder="e.g. Portland Cement Grade 53"
                 value={formData.material_name}
-                onChange={(e) => setFormData({...formData, material_name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, material_name: e.target.value })}
                 required
-                className="rounded-xl border-gray-200"
+                className={inputCls}
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-[#626A66] dark:text-[#9BA49E]">
+                  Unit <span className="text-[#B85B63]">*</span>
+                </Label>
                 <Input
                   id="unit"
                   placeholder="e.g. Bags, Tons, LTR"
                   value={formData.unit}
-                  onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                   required
-                  className="rounded-xl border-gray-200 uppercase"
+                  className={`${inputCls} uppercase`}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="min_stock">Minimum Stock</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-[#626A66] dark:text-[#9BA49E]">
+                  Minimum Stock
+                </Label>
                 <Input
                   id="min_stock"
                   type="number"
                   min="0"
                   value={formData.minimum_stock_level}
-                  onChange={(e) => setFormData({...formData, minimum_stock_level: parseInt(e.target.value) || 0})}
+                  onChange={(e) => setFormData({ ...formData, minimum_stock_level: parseInt(e.target.value) || 0 })}
                   required
-                  className="rounded-xl border-gray-200"
+                  className={inputCls}
                 />
               </div>
             </div>
-            
-            <DialogFooter className="pt-4 border-t border-gray-100 dark:border-gray-800">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" className="rounded-xl bg-primary hover:bg-primary/90">Save Material</Button>
+
+            <DialogFooter className="pt-3 border-t border-[#E6E9E7] dark:border-white/[0.07] gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+                className="h-8 text-xs rounded-[7px] border-[#E6E9E7] text-[#626A66] hover:bg-[#F5F6F5]"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="h-8 text-xs font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[7px] shadow-sm"
+              >
+                Save Material
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }

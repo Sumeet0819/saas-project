@@ -3,20 +3,65 @@
 import React, { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { ArrowLeft, User as UserIcon, Mail, Phone, Shield, Edit, Building2 } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Mail, Phone, Shield, Edit, Building2, AlertTriangle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchUserById } from '../../../../store/slices/usersSlice';
 import { fetchOrganizations } from '../../../../store/slices/organizationsSlice';
 import { RootState, AppDispatch } from '../../../../store/store';
 import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
+import { motion, Variants } from 'framer-motion';
+
+const fade: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 24 } },
+};
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const ROLE_CONFIG: Record<string, { bg: string; text: string }> = {
+  Admin:             { bg: '#F3EFFE', text: '#7C4DFF' },
+  'Project Manager': { bg: '#EBF2FF', text: '#2563EB' },
+  'Site Engineer':   { bg: '#E7F5EF', text: '#079B68' },
+  Contractor:        { bg: '#FEF9EC', text: '#D5A04A' },
+  Supplier:          { bg: '#F9EDEF', text: '#B85B63' },
+};
+
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-[#E6E9E7] dark:border-white/[0.07] last:border-0">
+      <div className="w-8 h-8 rounded-[7px] bg-[#F5F6F5] dark:bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
+        <Icon size={14} className="text-[#929994]" strokeWidth={1.75} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#929994] mb-0.5">{label}</p>
+        <p className="text-sm font-medium text-[#171A18] dark:text-[#EFF1F0] truncate">{value || 'N/A'}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <motion.div
+      variants={fade}
+      className="bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] shadow-[0_1px_4px_rgba(16,24,20,0.06)] overflow-hidden"
+    >
+      <div className="px-5 py-3.5 border-b border-[#E6E9E7] dark:border-white/[0.07]">
+        <h2 className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0]">{title}</h2>
+      </div>
+      <div className="px-5 py-1">{children}</div>
+    </motion.div>
+  );
+}
 
 export default function UserDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const userId = params.id as string;
   const dispatch = useDispatch<AppDispatch>();
-  
+
   const { currentUser: user, status: userStatus, error } = useSelector((state: RootState) => state.users);
   const { organizations, status: orgStatus } = useSelector((state: RootState) => state.organizations);
 
@@ -30,22 +75,11 @@ export default function UserDetailsPage() {
     }
   }, [orgStatus, dispatch]);
 
-  const org = organizations.find(o => o.id === user?.organization_id);
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'Admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'Project Manager': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'Site Engineer': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'Contractor': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'Supplier': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-    }
-  };
+  const org = organizations.find((o) => o.id === user?.organization_id);
 
   if (userStatus === 'loading') {
     return (
-      <div className="flex justify-center p-12">
+      <div className="flex justify-center items-center py-24">
         <ConstructionLoader size="md" />
       </div>
     );
@@ -53,103 +87,91 @@ export default function UserDetailsPage() {
 
   if (error || !user) {
     return (
-      <div className="text-destructive p-4 text-center">
-        Failed to load user details.
+      <div className="max-w-md mx-auto py-24 text-center">
+        <div className="w-14 h-14 bg-[#F9EDEF] rounded-[12px] flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={24} className="text-[#B85B63]" strokeWidth={1.5} />
+        </div>
+        <p className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0] mb-1">User not found</p>
+        <p className="text-xs text-[#929994] mb-4">We could not locate this team member profile.</p>
+        <Button
+          onClick={() => router.push('/users')}
+          className="bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] h-9 text-sm cursor-pointer"
+        >
+          Back to Users
+        </Button>
       </div>
     );
   }
 
+  const roleCfg = ROLE_CONFIG[user.role] || { bg: '#F5F6F5', text: '#929994' };
+
   return (
-    <div className="flex flex-col gap-6 max-w-[1000px] mx-auto w-full p-4 md:p-6">
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/users')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center shrink-0 overflow-hidden border-2 border-border shadow-sm">
+    <motion.div variants={container} initial="hidden" animate="show" className="max-w-[1000px] mx-auto w-full">
+      {/* Header */}
+      <motion.div variants={fade} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/users')}
+            className="w-8 h-8 flex items-center justify-center rounded-[7px] border border-[#E6E9E7] dark:border-white/[0.08] bg-white dark:bg-[#1B1E1C] text-[#626A66] hover:bg-[#F5F6F5] hover:text-[#171A18] transition-colors cursor-pointer shadow-[0_1px_2px_rgba(16,24,20,0.06)]"
+          >
+            <ArrowLeft size={15} strokeWidth={1.75} />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] rounded-full flex items-center justify-center shrink-0 border border-[#079B68]/15 overflow-hidden">
               {user.profile_photo ? (
                 <img src={user.profile_photo} alt={user.full_name} className="w-full h-full object-cover" />
               ) : (
-                <UserIcon size={32} className="text-primary" />
+                <span className="font-semibold text-sm text-[#079B68]">
+                  {user.full_name.charAt(0).toUpperCase()}
+                </span>
               )}
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">{user.full_name}</h1>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border inline-flex items-center gap-1 ${getRoleColor(user.role)}`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">{user.full_name}</h1>
+                <span
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                  style={{ background: roleCfg.bg, color: roleCfg.text }}
+                >
                   <Shield size={10} />
                   {user.role}
                 </span>
-                {!user.is_active && (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border bg-red-500/10 text-red-500 border-red-500/20">
-                    Inactive
-                  </span>
-                )}
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                    user.is_active ? 'bg-[#E7F5EF] text-[#079B68]' : 'bg-[#F9EDEF] text-[#B85B63]'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-[#079B68]' : 'bg-[#B85B63]'}`} />
+                  {user.is_active ? 'Active' : 'Inactive'}
+                </span>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">Joined {new Date(user.created_at).toLocaleDateString()}</p>
+              <p className="text-xs text-[#929994] mt-0.5">
+                Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
             </div>
           </div>
         </div>
-        <Button onClick={() => router.push(`/users/${user.id}/edit`)}>
-          <Edit className="mr-2 h-4 w-4" /> Edit
+        <Button
+          onClick={() => router.push(`/users/${user.id}/edit`)}
+          className="h-9 px-4 text-sm font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] gap-1.5 cursor-pointer shadow-sm transition-colors"
+        >
+          <Edit size={14} strokeWidth={2} /> Edit Profile
         </Button>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground font-medium uppercase">Email</span>
-                <span className="font-medium">{user.email}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground font-medium uppercase">Phone</span>
-                <span className="font-medium">{user.phone || 'No phone provided'}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Detail cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <SectionCard title="Contact Information">
+          <InfoRow icon={Mail} label="Email Address" value={user.email} />
+          <InfoRow icon={Phone} label="Phone Number" value={user.phone || ''} />
+          <InfoRow icon={Calendar} label="Date Registered" value={new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} />
+        </SectionCard>
 
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle>Organization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {user.organization_id ? (
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center">
-                   {org?.logo ? (
-                     <img src={org.logo} alt={org.name} className="w-full h-full object-cover rounded-xl" />
-                   ) : (
-                     <Building2 size={20} className="text-primary" />
-                   )}
-                </div>
-                <div>
-                  <h3 className="font-bold text-base">{org ? org.name : 'Loading...'}</h3>
-                  <p className="text-xs text-muted-foreground">Main Organization</p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground p-4 bg-primary/5 rounded-lg border border-border flex items-center gap-2">
-                <Building2 size={16} /> No organization assigned
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <SectionCard title="Role & Organization">
+          <InfoRow icon={Shield} label="Access Role" value={user.role} />
+          <InfoRow icon={Building2} label="Organization Affiliation" value={org ? org.name : (user.organization_id ? 'Loading...' : 'None Assigned')} />
+        </SectionCard>
       </div>
-    </div>
+    </motion.div>
   );
 }

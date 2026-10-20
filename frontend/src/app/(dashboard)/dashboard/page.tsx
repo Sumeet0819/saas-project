@@ -4,15 +4,25 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProjects } from '../../../store/slices/projectsSlice';
 import { fetchWorkers } from '../../../store/slices/workersSlice';
-import { 
-  Building2, Users, AlertTriangle, Box, 
-  ChevronDown, ArrowUp, Briefcase, HardHat,
+import {
+  Building2, Users, AlertTriangle, Box,
+  ChevronDown, Briefcase, HardHat,
   Activity, Truck, ShieldCheck, CheckCircle, Clock,
   CloudRain, Wind, Thermometer, CalendarClock, CreditCard,
-  UserCheck, PackageMinus, ClipboardList, Target
+  UserCheck, PackageMinus, ClipboardList, Target, MoreHorizontal,
+  TrendingUp, TrendingDown, Info
 } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer
+} from 'recharts';
+
+const BRAND = '#079B68';
+const BRAND_SOFT = '#E7F5EF';
+const BRAND_DEEP = '#087A55';
+const NEGATIVE = '#B85B63';
+const BORDER = '#E6E9E7';
 
 const cashFlowData = [
   { name: 'Jan', revenue: 4000, expense: 2400 },
@@ -24,26 +34,54 @@ const cashFlowData = [
   { name: 'Jul', revenue: 3490, expense: 4300 },
 ];
 
-const containerVariants: Variants = {
+const fade: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 22 } },
+};
+const container: Variants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 };
 
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-};
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div
+      variants={fade}
+      className={`bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] p-5 shadow-[0_1px_4px_rgba(16,24,20,0.06)] ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="mb-1">
+      <h2 className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0]">{title}</h2>
+      {subtitle && <p className="text-xs text-[#929994] mt-0.5">{subtitle}</p>}
+    </div>
+  );
+}
+
+function TrendBadge({ value, positive }: { value: string; positive: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+      style={{
+        background: positive ? '#E7F5EF' : '#F9EDEF',
+        color: positive ? '#269B75' : '#B85B63',
+      }}
+    >
+      {positive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+      {value}
+    </span>
+  );
+}
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { activeOrganizationId } = useAppSelector((state) => state.ui);
-  
   const { projects, status: projectsStatus } = useAppSelector((state) => state.projects);
   const { workers, status: workersStatus } = useAppSelector((state) => state.workers);
 
@@ -52,193 +90,187 @@ export default function DashboardPage() {
     if (workersStatus === 'idle') dispatch(fetchWorkers());
   }, [projectsStatus, workersStatus, dispatch]);
 
-  const orgProjects = React.useMemo(() => {
-    if (!activeOrganizationId) return [];
-    return projects.filter(p => p.organization_id === activeOrganizationId);
-  }, [projects, activeOrganizationId]);
+  const orgProjects = React.useMemo(
+    () => (activeOrganizationId ? projects.filter((p) => p.organization_id === activeOrganizationId) : []),
+    [projects, activeOrganizationId]
+  );
+  const orgWorkers = React.useMemo(
+    () => (activeOrganizationId ? workers.filter((w) => w.organization_id === activeOrganizationId) : []),
+    [workers, activeOrganizationId]
+  );
 
-  const orgWorkers = React.useMemo(() => {
-    if (!activeOrganizationId) return [];
-    return workers.filter(w => w.organization_id === activeOrganizationId);
-  }, [workers, activeOrganizationId]);
-
-  const activeProjectsCount = orgProjects.filter(p => p.status === 'Active').length;
+  const activeProjectsCount = orgProjects.filter((p) => p.status === 'Active').length;
   const totalWorkforce = orgWorkers.length;
+  const totalW = totalWorkforce || 30;
+  const concreteCount = Math.round(totalW * 0.4);
+  const steelCount = Math.round(totalW * 0.3);
+  const generalCount = Math.max(0, totalW - concreteCount - steelCount);
 
-  const currentDate = new Intl.DateTimeFormat('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric',
-    year: 'numeric'
+  const presentCount = Math.max(1, Math.round(totalW * 0.93));
+  const absentCount = Math.max(0, totalW - presentCount);
+  const presentPct = Math.round((presentCount / totalW) * 100);
+
+  const currentDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   }).format(new Date());
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className="flex flex-col max-w-[1600px] mx-auto w-full"
-    >
-      {/* Page Header */}
-      <motion.div variants={itemVariants} className="mb-8 pl-2">
-        <h1 className="text-[28px] font-bold tracking-tight text-gray-900 mb-1">Project Report</h1>
-        <p className="text-sm text-gray-500 font-medium">{currentDate}</p>
+    <motion.div variants={container} initial="hidden" animate="show" className="max-w-[1600px] mx-auto w-full">
+      {/* Page heading */}
+      <motion.div variants={fade} className="mb-6">
+        <p className="text-xs text-[#929994] mb-0.5">{currentDate}</p>
+        <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">
+          Project Report
+        </h1>
       </motion.div>
 
-      {/* Top 6-Column Grid for Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
-        
-        {/* Primary Card */}
-        <motion.div variants={itemVariants} whileHover={{ y: -5, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.2)" }} className="relative overflow-hidden bg-linear-to-br from-primary to-primary/80 rounded-2xl p-5 text-primary-foreground shadow-lg flex flex-col justify-between group">
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500"></div>
-          <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white/10 opacity-20 blur-xl"></div>
-          <div className="relative z-10 flex justify-between items-start mb-4">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-              <Briefcase size={20} strokeWidth={2.5} className="text-white" />
+      {/* ── Minimal KPI row ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-5 items-stretch">
+        {/* Card 1: Primary KPI - Active Projects */}
+        <motion.div
+          variants={fade}
+          className="relative overflow-hidden rounded-[10px] p-5 text-white flex flex-col justify-between shadow-sm h-full"
+          style={{ background: 'linear-gradient(135deg, #079B68 0%, #087A55 100%)' }}
+        >
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-white/20 rounded-[7px] flex items-center justify-center">
+              <Briefcase size={16} className="text-white" strokeWidth={2} />
             </div>
-            <div className="px-2.5 py-1 bg-white/20 rounded-full text-[11px] font-bold backdrop-blur-md border border-white/10">
-              +12.4%
-            </div>
-          </div>
-          <div className="relative z-10">
-            <div className="text-xs text-primary-foreground/80 font-medium mb-1">Total Active Projects</div>
-            <div className="flex items-end gap-2">
-              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="text-[28px] font-bold leading-none tracking-tight">{activeProjectsCount}</motion.div>
-              <div className="text-[10px] text-primary-foreground/60 mb-1 font-medium">vs last month</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* White Card 1 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center">
-              <Users size={20} strokeWidth={2.5} className="text-primary" />
-            </div>
-            <div className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-              +5.2%
-            </div>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
+              <TrendingUp size={10} /> +12.4%
+            </span>
           </div>
           <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Workforce</div>
-            <div className="flex items-end gap-2">
-              <div className="text-[28px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">{totalWorkforce}</div>
-              <div className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 font-medium">vs last month</div>
+            <p className="text-xs text-white/80 font-medium mb-1">Active Projects</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-white">{activeProjectsCount}</span>
+              <span className="text-[11px] text-white/70">vs last month</span>
             </div>
           </div>
         </motion.div>
 
-        {/* White Card 2 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="w-10 h-10 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center justify-center">
-              <AlertTriangle size={20} strokeWidth={2.5} className="text-destructive" />
+        {/* Card 2: Total Workforce */}
+        <Card className="flex flex-col justify-between h-full">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[7px] flex items-center justify-center">
+              <Users size={16} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
-            <div className="px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-[11px] font-bold">
-              -2.1%
-            </div>
+            <TrendBadge value="+5.2%" positive={true} />
           </div>
           <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Critical Issues</div>
-            <div className="flex items-end gap-2">
-              <div className="text-[28px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">7</div>
-              <div className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 font-medium">vs last month</div>
+            <p className="text-xs text-[#929994] font-medium mb-1">Total Workforce</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-[#171A18] dark:text-[#EFF1F0]">
+                {totalWorkforce}
+              </span>
+              <span className="text-[11px] text-[#929994]">vs last month</span>
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* White Card 3 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -5 }} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center">
-              <Box size={20} strokeWidth={2.5} className="text-primary" />
+        {/* Card 3: Critical Issues */}
+        <Card className="flex flex-col justify-between h-full">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-[#F9EDEF] dark:bg-[rgba(184,91,99,0.12)] rounded-[7px] flex items-center justify-center">
+              <AlertTriangle size={16} className="text-[#B85B63]" strokeWidth={1.75} />
             </div>
-            <div className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-              +18.3%
-            </div>
+            <TrendBadge value="-2.1%" positive={false} />
           </div>
           <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Material Deliveries</div>
-            <div className="flex items-end gap-2">
-              <div className="text-[28px] font-bold leading-none tracking-tight text-gray-900 dark:text-white">124</div>
-              <div className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 font-medium">vs last month</div>
+            <p className="text-xs text-[#929994] font-medium mb-1">Critical Issues</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-[#171A18] dark:text-[#EFF1F0]">
+                7
+              </span>
+              <span className="text-[11px] text-[#929994]">vs last month</span>
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Safety & Incidents Widget */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Safety</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Site incidents</p>
+        {/* Card 4: Material Deliveries */}
+        <Card className="flex flex-col justify-between h-full">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[7px] flex items-center justify-center">
+              <Truck size={16} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <ShieldCheck size={20} className="text-primary" />
+            <TrendBadge value="+18.3%" positive={true} />
+          </div>
+          <div>
+            <p className="text-xs text-[#929994] font-medium mb-1">Material Deliveries</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-[#171A18] dark:text-[#EFF1F0]">
+                124
+              </span>
+              <span className="text-[11px] text-[#929994]">vs last month</span>
             </div>
           </div>
-          <div className="flex flex-col items-center justify-center py-2 relative">
-            <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute bg-primary/20 w-20 h-20 rounded-full opacity-50 blur-xl"></motion.div>
-            <div className="text-4xl font-black text-gray-900 dark:text-white mb-2 relative z-10">42</div>
-            <div className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-1 rounded-full relative z-10">Days Zero Incidents</div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs font-medium">
-            <span className="text-gray-500 dark:text-gray-400">Minor this month</span>
-            <span className="text-gray-900 dark:text-white font-bold">2</span>
-          </div>
-        </motion.div>
+        </Card>
 
-        {/* Weather & Site Conditions Widget */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between overflow-hidden relative">
-          <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Conditions</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Weather impact</p>
+        {/* Card 5: Safety */}
+        <Card className="flex flex-col justify-between h-full">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[7px] flex items-center justify-center">
+              <ShieldCheck size={16} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <CloudRain size={20} />
+            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] text-[#079B68]">
+              Safe
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-[#929994] font-medium mb-1">Safety Record</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-[#171A18] dark:text-[#EFF1F0]">
+                42
+              </span>
+              <span className="text-[11px] text-[#929994]">days incident-free</span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-4 mb-4 relative z-10">
-            <div className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">18&deg;</div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300"><Thermometer size={12} className="text-gray-400 dark:text-gray-500" /> H 22&deg; / L 14&deg;</div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300"><Wind size={12} className="text-gray-400 dark:text-gray-500" /> 12 km/h</div>
-            </div>
-          </div>
+        </Card>
 
-          <div className="bg-destructive/10 rounded-xl p-3 flex items-start gap-2 border border-destructive/20 relative z-10">
-            <AlertTriangle size={14} className="text-destructive shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[11px] font-bold text-destructive mb-0.5">Delay Warning</p>
-              <p className="text-[10px] font-medium text-destructive/80 leading-tight">Rain expected at 14:00. Pouring may be delayed.</p>
+        {/* Card 6: Weather & Conditions */}
+        <Card className="flex flex-col justify-between h-full">
+          <div className="flex justify-between items-start mb-3">
+            <div className="w-8 h-8 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[7px] flex items-center justify-center">
+              <CloudRain size={16} className="text-[#079B68]" strokeWidth={1.75} />
+            </div>
+            <span className="text-[11px] font-medium text-[#626A66] dark:text-[#9BA49E]">
+              12 km/h
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-[#929994] font-medium mb-1">Site Conditions</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[28px] font-bold leading-none text-[#171A18] dark:text-[#EFF1F0]">
+                18°
+              </span>
+              <span className="text-[11px] text-[#929994]">H 22° · L 14°</span>
             </div>
           </div>
-        </motion.div>
-
+        </Card>
       </div>
 
-      {/* Main 4-Column Grid for Remaining Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-8">
+      {/* ── Main grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-8">
 
-        {/* Bar Chart Card */}
-        <motion.div variants={itemVariants} className="col-span-1 lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
+        {/* Budget vs Actual Chart */}
+        <Card className="col-span-1 lg:col-span-2">
+          <div className="flex justify-between items-start mb-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Budget vs Actual Cost</h2>
-              <div className="text-xs text-gray-500 dark:text-gray-400 font-medium flex items-center gap-3">
-                <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-primary"></div> Actual</span>
-                <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div> Budget</span>
+              <SectionTitle title="Budget vs Actual Cost" />
+              <div className="flex items-center gap-3 mt-1">
+                <span className="flex items-center gap-1.5 text-[11px] text-[#626A66]">
+                  <span className="w-2 h-2 rounded-full bg-[#079B68]" /> Actual
+                </span>
+                <span className="flex items-center gap-1.5 text-[11px] text-[#626A66]">
+                  <span className="w-2 h-2 rounded-full bg-[#D8EFE5]" /> Budget
+                </span>
               </div>
             </div>
-            <button className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              Year <ChevronDown size={14} strokeWidth={2.5} className="text-gray-500 dark:text-gray-400" />
+            <button className="flex items-center gap-1 text-xs font-medium text-[#626A66] bg-[#F5F6F5] dark:bg-white/[0.04] border border-[#E6E9E7] dark:border-white/[0.08] px-2.5 py-1 rounded-full hover:bg-[#F0F2F1] transition-colors cursor-pointer">
+              Year <ChevronDown size={12} />
             </button>
           </div>
-          
-          <div className="h-[200px] w-full flex items-end justify-between px-2 gap-2">
+          <div className="h-[180px] w-full flex items-end justify-between px-1 gap-2">
             {[
               { label: 'Jan', actual: 80, budget: 100 },
               { label: 'Feb', actual: 65, budget: 85 },
@@ -248,414 +280,415 @@ export default function DashboardPage() {
               { label: 'Jun', actual: 50, budget: 70 },
               { label: 'Jul', actual: 85, budget: 100 },
             ].map((month, i) => (
-              <div key={i} className="flex flex-col items-center flex-1 gap-2 group relative">
-                <div className="flex items-end justify-center gap-1 w-full h-[160px]">
-                  <motion.div 
+              <div key={i} className="flex flex-col items-center flex-1 gap-1.5 group">
+                <div className="flex items-end justify-center gap-1 w-full h-[144px]">
+                  <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${month.actual}%` }}
-                    transition={{ duration: 1, delay: i * 0.1 }}
-                    className="w-1/2 max-w-[16px] bg-primary rounded-full transition-all group-hover:opacity-80 relative cursor-pointer" 
-                  >
-                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] py-1.5 px-2.5 rounded-lg shadow-lg whitespace-nowrap z-10 font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="flex items-center gap-1"><div className="w-1 h-1 rounded-full bg-primary/50"></div> ${month.actual}k Actual</span>
-                        <span className="flex items-center gap-1"><div className="w-1 h-1 rounded-full bg-primary"></div> ${month.budget}k Budget</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                  <motion.div 
+                    transition={{ duration: 0.8, delay: i * 0.08 }}
+                    className="w-1/2 max-w-[14px] rounded-full cursor-pointer transition-opacity group-hover:opacity-80"
+                    style={{ background: BRAND }}
+                  />
+                  <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${month.budget}%` }}
-                    transition={{ duration: 1, delay: i * 0.1 + 0.2 }}
-                    className="w-1/2 max-w-[16px] bg-primary/40 rounded-full transition-all group-hover:opacity-80 cursor-pointer" 
-                  ></motion.div>
+                    transition={{ duration: 0.8, delay: i * 0.08 + 0.15 }}
+                    className="w-1/2 max-w-[14px] rounded-full cursor-pointer transition-opacity group-hover:opacity-80"
+                    style={{ background: '#D8EFE5' }}
+                  />
                 </div>
-                <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500">{month.label}</span>
+                <span className="text-[10px] font-medium text-[#929994]">{month.label}</span>
               </div>
             ))}
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Cash Flow Widget */}
-        <motion.div variants={itemVariants} className="col-span-1 lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
+        {/* Cash Flow */}
+        <Card className="col-span-1 lg:col-span-2">
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Cash Flow</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Revenue vs Expenses (YTD)</p>
+              <SectionTitle title="Cash Flow" subtitle="Revenue vs Expenses (YTD)" />
             </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <CreditCard size={20} />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <CreditCard size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
-
-          <div className="flex-1 w-full h-[200px] -ml-2 mt-2">
+          <div className="h-[190px] w-full -ml-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlowData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <linearGradient id="gRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={BRAND} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={BRAND} stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  <linearGradient id="gExpense" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={NEGATIVE} stopOpacity={0.20} />
+                    <stop offset="95%" stopColor={NEGATIVE} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} dy={10} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF0EF" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#929994' }} dy={8} />
                 <YAxis hide domain={['auto', 'auto']} />
-                <RechartsTooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                  itemStyle={{ fontSize: '12px', fontWeight: 600 }}
-                  labelStyle={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}
+                <RechartsTooltip
+                  contentStyle={{ borderRadius: '9px', border: '1px solid #E6E9E7', boxShadow: '0 4px 16px rgba(16,24,20,0.08)', fontSize: '12px' }}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpense)" />
+                <Area type="monotone" dataKey="revenue" stroke={BRAND} strokeWidth={2} fillOpacity={1} fill="url(#gRevenue)" />
+                <Area type="monotone" dataKey="expense" stroke={NEGATIVE} strokeWidth={2} fillOpacity={1} fill="url(#gExpense)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Donut Chart Card */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col items-center">
-          <div className="flex justify-between items-start w-full mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Workforce</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Distribution</p>
+        {/* Workforce */}
+        <Card className="col-span-1 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-2">
+            <SectionTitle title="Workforce" subtitle="Trade distribution" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <Users size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
 
-          <div className="relative w-36 h-36 mb-6 shrink-0">
-            <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-border, #f1f5f9)" strokeWidth="6" strokeLinecap="round" />
-              <motion.circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" className="text-primary" strokeWidth="6" strokeLinecap="round" strokeDasharray="263.9" initial={{ strokeDashoffset: 263.9 }} animate={{ strokeDashoffset: 263.9 - (263.9 * 0.7) }} transition={{ duration: 1.5, ease: "easeOut" }} />
-              
-              <circle cx="50" cy="50" r="34" fill="none" stroke="var(--color-border, #f1f5f9)" strokeWidth="6" strokeLinecap="round" />
-              <motion.circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" className="text-primary/70" strokeWidth="6" strokeLinecap="round" strokeDasharray="213.6" initial={{ strokeDashoffset: 213.6 }} animate={{ strokeDashoffset: 213.6 - (213.6 * 0.6) }} transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }} />
-              
-              <circle cx="50" cy="50" r="26" fill="none" stroke="var(--color-border, #f1f5f9)" strokeWidth="6" strokeLinecap="round" />
-              <motion.circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" className="text-primary/40" strokeWidth="6" strokeLinecap="round" strokeDasharray="163.4" initial={{ strokeDashoffset: 163.4 }} animate={{ strokeDashoffset: 163.4 - (163.4 * 0.4) }} transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }} />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">{totalWorkforce}</span>
-              <span className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Workers</span>
-            </div>
-          </div>
+          <div className="flex items-center gap-3.5 my-auto py-1">
+            {/* Slender Multi-Segment Ring Chart (Refined, no thick pipe look) */}
+            <div className="relative w-[84px] h-[84px] shrink-0">
+              <svg viewBox="0 0 88 88" className="w-full h-full -rotate-90">
+                {/* Background circle track */}
+                <circle cx="44" cy="44" r="34" fill="none" stroke="#F1F3F2" strokeWidth="4.5" className="dark:stroke-white/[0.06]" />
 
-          <div className="w-full space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                <div className="w-4 h-4 bg-primary/10 rounded flex items-center justify-center"><Building2 size={10} className="text-primary" /></div>
-                Concrete
+                {/* Segment 1: Concrete (40%) */}
+                <motion.circle
+                  cx="44" cy="44" r="34" fill="none" stroke="#079B68" strokeWidth="4.5" strokeLinecap="round"
+                  strokeDasharray="76.5 213.63" strokeDashoffset="-2.25"
+                  initial={{ strokeDasharray: "0 213.63" }}
+                  animate={{ strokeDasharray: "76.5 213.63" }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+
+                {/* Segment 2: Steel (30%) */}
+                <motion.circle
+                  cx="44" cy="44" r="34" fill="none" stroke="#2DD4BF" strokeWidth="4.5" strokeLinecap="round"
+                  strokeDasharray="55.1 213.63" strokeDashoffset="-87.7"
+                  initial={{ strokeDasharray: "0 213.63" }}
+                  animate={{ strokeDasharray: "55.1 213.63" }}
+                  transition={{ duration: 0.8, delay: 0.15, ease: 'easeOut' }}
+                />
+
+                {/* Segment 3: General (30%) */}
+                <motion.circle
+                  cx="44" cy="44" r="34" fill="none" stroke="#CBD5E1" strokeWidth="4.5" strokeLinecap="round"
+                  className="dark:stroke-white/30"
+                  strokeDasharray="55.1 213.63" strokeDashoffset="-151.8"
+                  initial={{ strokeDasharray: "0 213.63" }}
+                  animate={{ strokeDasharray: "55.1 213.63" }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-bold tracking-tight text-[#171A18] dark:text-[#EFF1F0] leading-none">
+                  {totalW}
+                </span>
+                <span className="text-[9px] uppercase tracking-wider text-[#929994] font-medium mt-1">
+                  Workers
+                </span>
               </div>
-              <span className="text-xs font-bold text-gray-900 dark:text-white">120</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                <div className="w-4 h-4 bg-primary/10 rounded flex items-center justify-center"><HardHat size={10} className="text-primary/70" /></div>
-                Steel
-              </div>
-              <span className="text-xs font-bold text-gray-900 dark:text-white">85</span>
             </div>
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                <div className="w-4 h-4 bg-primary/10 rounded flex items-center justify-center"><Users size={10} className="text-primary/40" /></div>
-                General
+            {/* Structured Trade Breakdown */}
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-[#079B68] shrink-0" />
+                  <span className="text-[#626A66] dark:text-[#9BA49E] font-medium truncate">Concrete</span>
+                </div>
+                <div className="flex items-baseline gap-1 shrink-0 ml-1">
+                  <span className="font-semibold text-[#171A18] dark:text-[#EFF1F0]">{concreteCount}</span>
+                  <span className="text-[10px] text-[#929994]">40%</span>
+                </div>
               </div>
-              <span className="text-xs font-bold text-gray-900 dark:text-white">143</span>
-            </div>
-          </div>
-        </motion.div>
 
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-[#2DD4BF] shrink-0" />
+                  <span className="text-[#626A66] dark:text-[#9BA49E] font-medium truncate">Steel</span>
+                </div>
+                <div className="flex items-baseline gap-1 shrink-0 ml-1">
+                  <span className="font-semibold text-[#171A18] dark:text-[#EFF1F0]">{steelCount}</span>
+                  <span className="text-[10px] text-[#929994]">30%</span>
+                </div>
+              </div>
 
-        {/* Equipment Utilization Widget */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Equipment</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Machinery status</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <Truck size={20} className="text-primary" />
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1.5">
-                <span className="text-gray-700 dark:text-gray-300">Excavators</span>
-                <span className="text-gray-900 dark:text-white">85%</span>
-              </div>
-              <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '85%' }} transition={{ duration: 1, delay: 0.5 }} className="h-full bg-primary rounded-full"></motion.div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1.5">
-                <span className="text-gray-700 dark:text-gray-300">Cranes</span>
-                <span className="text-gray-900 dark:text-white">60%</span>
-              </div>
-              <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '60%' }} transition={{ duration: 1, delay: 0.6 }} className="h-full bg-primary/80 rounded-full"></motion.div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs font-semibold mb-1.5">
-                <span className="text-gray-700 dark:text-gray-300">Dump Trucks</span>
-                <span className="text-gray-900 dark:text-white">92%</span>
-              </div>
-              <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '92%' }} transition={{ duration: 1, delay: 0.7 }} className="h-full bg-primary/60 rounded-full"></motion.div>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-[#CBD5E1] dark:bg-white/30 shrink-0" />
+                  <span className="text-[#626A66] dark:text-[#9BA49E] font-medium truncate">General</span>
+                </div>
+                <div className="flex items-baseline gap-1 shrink-0 ml-1">
+                  <span className="font-semibold text-[#171A18] dark:text-[#EFF1F0]">{generalCount}</span>
+                  <span className="text-[10px] text-[#929994]">30%</span>
+                </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-
-
-        {/* Upcoming Milestones Timeline */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Milestones</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Next 7 days</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <CalendarClock size={20} />
+        {/* Equipment */}
+        <Card className="col-span-1 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-2">
+            <SectionTitle title="Equipment" subtitle="Machinery status" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <Truck size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
+          <div className="space-y-3 pt-1">
+            {[
+              { label: 'Excavators', pct: 85 },
+              { label: 'Cranes', pct: 60 },
+              { label: 'Dump Trucks', pct: 92 },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between text-xs font-medium mb-1">
+                  <span className="text-[#626A66] dark:text-[#9BA49E]">{item.label}</span>
+                  <span className="font-semibold text-[#171A18] dark:text-[#EFF1F0]">{item.pct}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-[#EEF0EF] dark:bg-white/[0.06] rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.pct}%` }}
+                    transition={{ duration: 0.9, delay: 0.2 }}
+                    className="h-full rounded-full"
+                    style={{ background: BRAND }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
-          <div className="flex flex-col flex-1 justify-around relative pl-1">
-            <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-gray-100 dark:bg-gray-800 rounded-full"></div>
-            
-            <div className="relative pl-6 pb-3">
-              <div className="absolute left-1.5 top-1.5 w-2 h-2 rounded-full bg-primary ring-2 ring-white dark:ring-gray-900 shadow-sm"></div>
-              <p className="text-[10px] font-bold text-primary mb-0.5">TOMORROW</p>
-              <p className="text-xs font-bold text-gray-900 dark:text-white">Alpha Sign-off</p>
-            </div>
-            
-            <div className="relative pl-6 pb-3">
-              <div className="absolute left-1.5 top-1.5 w-2 h-2 rounded-full bg-primary/70 ring-2 ring-white dark:ring-gray-900 shadow-sm"></div>
-              <p className="text-[10px] font-bold text-primary/70 mb-0.5">FRIDAY</p>
-              <p className="text-xs font-bold text-gray-900 dark:text-white">Steel Delivery</p>
-            </div>
-            
-            <div className="relative pl-6">
-              <div className="absolute left-1.5 top-1.5 w-2 h-2 rounded-full bg-primary/30 ring-2 ring-white dark:ring-gray-900"></div>
-              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5">MONDAY</p>
-              <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Phase 2 Start</p>
+        {/* Milestones */}
+        <Card className="col-span-1 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-2">
+            <SectionTitle title="Milestones" subtitle="Next 7 days" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <CalendarClock size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
-        </motion.div>
+          <div className="space-y-3 pt-1 relative pl-3">
+            <div className="absolute left-[3px] top-2 bottom-2 w-px bg-[#E6E9E7] dark:bg-white/[0.08]" />
+            {[
+              { when: 'Tomorrow', label: 'Alpha Sign-off', color: BRAND },
+              { when: 'Friday', label: 'Steel Delivery', color: '#49C795' },
+              { when: 'Monday', label: 'Phase 2 Start', color: '#D8DEDA' },
+            ].map((ms) => (
+              <div key={ms.label} className="relative pl-4">
+                <span
+                  className="absolute left-[-2px] top-1.5 w-2 h-2 rounded-full border-2 border-white dark:border-[#1B1E1C]"
+                  style={{ background: ms.color }}
+                />
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#929994] mb-0.5">
+                  {ms.when}
+                </p>
+                <p className="text-xs font-medium text-[#171A18] dark:text-[#EFF1F0] truncate">{ms.label}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
 
-        {/* Daily Attendance Overview */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Attendance</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Daily workforce</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <UserCheck size={20} />
+        {/* Attendance */}
+        <Card className="col-span-1 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-2">
+            <SectionTitle title="Attendance" subtitle="Daily workforce" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <UserCheck size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
-          
-          <div className="flex flex-col gap-4">
+          <div className="space-y-3 pt-1">
             <div className="flex items-end justify-between">
               <div>
-                <span className="text-3xl font-black text-gray-900 dark:text-white">94%</span>
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider ml-2">Present</span>
+                <span className="text-2xl font-bold text-[#171A18] dark:text-[#EFF1F0]">{presentPct}%</span>
+                <span className="text-[10px] font-semibold text-[#079B68] ml-2 uppercase tracking-wider bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] px-2 py-0.5 rounded-full">
+                  Present
+                </span>
               </div>
-              <div className="text-right">
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">327</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 block">/ 348 Total</span>
-              </div>
-            </div>
-            
-            <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
-              <motion.div initial={{ width: 0 }} animate={{ width: '94%' }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-primary"></motion.div>
-              <motion.div initial={{ width: 0 }} animate={{ width: '6%' }} transition={{ duration: 1, delay: 0.3 }} className="h-full bg-destructive/80"></motion.div>
+              <span className="text-xs text-[#929994] font-medium">
+                {presentCount} / {totalW} on site
+              </span>
             </div>
 
-            <div className="flex justify-between text-xs font-medium pt-2 border-t border-gray-50 dark:border-gray-800">
-              <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-destructive/80"></div> 21 Absent</span>
-              <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary/40"></div> 42 Overtime</span>
+            <div className="h-1.5 w-full bg-[#EEF0EF] dark:bg-white/[0.06] rounded-full overflow-hidden flex">
+              <motion.div initial={{ width: 0 }} animate={{ width: `${presentPct}%` }} transition={{ duration: 0.9, delay: 0.2 }}
+                className="h-full rounded-l-full" style={{ background: BRAND }} />
+              <motion.div initial={{ width: 0 }} animate={{ width: `${100 - presentPct}%` }} transition={{ duration: 0.9, delay: 0.3 }}
+                className="h-full rounded-r-full" style={{ background: NEGATIVE }} />
+            </div>
+
+            <div className="flex justify-between text-xs text-[#626A66] dark:text-[#9BA49E] pt-1">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: NEGATIVE }} /> {absentCount} Absent
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#D8EFE5]" /> 4 Overtime
+              </span>
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Low Stock Alerts */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-destructive/10 dark:border-destructive/20 shadow-[0_4px_24px_rgba(239,68,68,0.05)] flex flex-col justify-between">
+        {/* Inventory Alerts */}
+        <Card className="col-span-1" style={{ borderColor: 'rgba(184,91,99,0.15)' }}>
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Inventory Alerts</h2>
-              <p className="text-xs text-destructive font-medium">Below minimum stock</p>
+              <SectionTitle title="Inventory Alerts" />
+              <p className="text-xs text-[#B85B63] font-medium">Below minimum stock</p>
             </div>
-            <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center text-destructive relative">
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
-              <PackageMinus size={20} />
-            </div>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/20 flex justify-between items-center">
-              <div>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">Cement (Grade 53)</p>
-                <p className="text-[10px] text-destructive/80 font-medium">Min: 500 Bags</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-destructive">120</p>
-                <p className="text-[9px] text-destructive/70 uppercase font-bold">In Stock</p>
-              </div>
-            </div>
-            <div className="bg-primary/10 rounded-lg p-3 border border-primary/20 flex justify-between items-center">
-              <div>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">Steel Rebar (12mm)</p>
-                <p className="text-[10px] text-primary/80 font-medium">Min: 10 Tons</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-black text-primary">8.5</p>
-                <p className="text-[9px] text-primary/70 uppercase font-bold">In Stock</p>
-              </div>
+            <div className="relative w-7 h-7 bg-[#F9EDEF] rounded-[6px] flex items-center justify-center">
+              <PackageMinus size={14} className="text-[#B85B63]" strokeWidth={1.75} />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#B85B63] rounded-full animate-pulse" />
             </div>
           </div>
-        </motion.div>
+          <div className="space-y-2.5">
+            <div className="bg-[#F9EDEF] border border-[#B85B63]/15 rounded-[8px] p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0]">Cement (Grade 53)</p>
+                <p className="text-[10px] text-[#B85B63]/80">Min: 500 Bags</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-[#B85B63]">120</p>
+                <p className="text-[9px] uppercase font-bold text-[#B85B63]/70">In Stock</p>
+              </div>
+            </div>
+            <div className="bg-[#E7F5EF] border border-[#079B68]/15 rounded-[8px] p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0]">Steel Rebar (12mm)</p>
+                <p className="text-[10px] text-[#079B68]/80">Min: 10 Tons</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-[#079B68]">8.5</p>
+                <p className="text-[9px] uppercase font-bold text-[#079B68]/70">In Stock</p>
+              </div>
+            </div>
+          </div>
+        </Card>
 
-        {/* Material Requests Pipeline */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+        {/* Material Requests */}
+        <Card className="col-span-1">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Requests</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Material procurement</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <ClipboardList size={20} />
+            <SectionTitle title="Requests" subtitle="Material procurement" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <ClipboardList size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
-          
-          <div className="flex flex-col justify-around flex-1 mt-2">
-            <div className="flex items-center gap-3">
-              <div className="w-8 text-right text-xs font-bold text-primary">12</div>
-              <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '40%' }} transition={{ duration: 1 }} className="h-full bg-primary/40 rounded-full"></motion.div>
+          <div className="space-y-3">
+            {[
+              { count: 12, pct: 40, label: 'Pending' },
+              { count: 8, pct: 60, label: 'Ordered' },
+              { count: 24, pct: 85, label: 'Delivered' },
+            ].map((item, i) => (
+              <div key={item.label} className="flex items-center gap-3">
+                <span className="w-7 text-right text-xs font-semibold text-[#079B68]">{item.count}</span>
+                <div className="flex-1 h-1.5 bg-[#EEF0EF] dark:bg-white/[0.06] rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.pct}%` }}
+                    transition={{ duration: 0.9, delay: i * 0.1 }}
+                    className="h-full rounded-full"
+                    style={{ background: BRAND, opacity: 0.4 + i * 0.3 }}
+                  />
+                </div>
+                <span className="w-16 text-[10px] font-semibold text-[#929994] uppercase">{item.label}</span>
               </div>
-              <div className="w-16 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Pending</div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Task Progress */}
+        <Card className="col-span-1 lg:col-span-2">
+          <div className="flex justify-between items-start mb-4">
+            <SectionTitle title="Task Progress" subtitle="Active site activities" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <Target size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="w-8 text-right text-xs font-bold text-primary">8</div>
-              <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '60%' }} transition={{ duration: 1, delay: 0.1 }} className="h-full bg-primary/70 rounded-full"></motion.div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+            <div className="relative w-28 h-28 shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#EEF0EF" strokeWidth="10" />
+                <motion.circle cx="50" cy="50" r="40" fill="none" stroke={BRAND} strokeWidth="10" strokeLinecap="round"
+                  strokeDasharray="251.2" initial={{ strokeDashoffset: 251.2 }}
+                  animate={{ strokeDashoffset: 251.2 - 251.2 * 0.68 }} transition={{ duration: 1.3, ease: 'easeOut' }} />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold text-[#171A18] dark:text-[#EFF1F0]">68%</span>
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-[#929994]">Done</span>
               </div>
-              <div className="w-16 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Ordered</div>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="w-8 text-right text-xs font-bold text-primary">24</div>
-              <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: '85%' }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-primary rounded-full"></motion.div>
-              </div>
-              <div className="w-16 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Delivered</div>
+            <div className="grid grid-cols-3 sm:grid-cols-1 gap-3 w-full sm:w-auto">
+              {[
+                { val: '42', label: 'Pending tasks', color: '#929994' },
+                { val: '18', label: 'In Progress', color: '#079B68' },
+                { val: '128', label: 'Completed', color: BRAND },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
+                  <div>
+                    <p className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0]">{s.val}</p>
+                    <p className="text-[10px] text-[#929994]">{s.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </motion.div>
+        </Card>
 
-        {/* Site Activities Progress */}
-        <motion.div variants={itemVariants} className="col-span-1 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col items-center">
-          <div className="flex justify-between items-start w-full mb-2">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Task Progress</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Active site activities</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <Target size={20} />
+        {/* Recent Activity */}
+        <Card className="col-span-1 md:col-span-2 lg:col-span-4">
+          <div className="flex justify-between items-start mb-4">
+            <SectionTitle title="Recent Activity" subtitle="Latest project updates" />
+            <div className="w-7 h-7 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] rounded-[6px] flex items-center justify-center">
+              <Activity size={14} className="text-[#079B68]" strokeWidth={1.75} />
             </div>
           </div>
-
-          <div className="relative w-32 h-32 shrink-0 mt-2">
-            <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-border, #f1f5f9)" strokeWidth="10" strokeLinecap="round" />
-              <motion.circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" className="text-primary" strokeWidth="10" strokeLinecap="round" strokeDasharray="251.2" initial={{ strokeDashoffset: 251.2 }} animate={{ strokeDashoffset: 251.2 - (251.2 * 0.68) }} transition={{ duration: 1.5, ease: "easeOut" }} />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-gray-900 dark:text-white">68%</span>
-              <span className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Completed</span>
-            </div>
-          </div>
-
-          <div className="w-full flex justify-between mt-4 px-2">
-             <div className="text-center">
-               <p className="text-sm font-bold text-gray-900 dark:text-white">42</p>
-               <p className="text-[10px] font-semibold text-gray-500 uppercase">Pending</p>
-             </div>
-             <div className="text-center">
-               <p className="text-sm font-bold text-primary/80">18</p>
-               <p className="text-[10px] font-semibold text-primary/70 uppercase">In Progress</p>
-             </div>
-             <div className="text-center">
-               <p className="text-sm font-bold text-primary">128</p>
-               <p className="text-[10px] font-semibold text-primary/80 uppercase">Done</p>
-             </div>
-          </div>
-        </motion.div>
-
-        {/* Recent Activity Widget */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2 lg:col-span-4 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">Recent Activity</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Latest project updates</p>
-            </div>
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <Activity size={20} className="text-primary" />
-            </div>
-          </div>
-          <div className="w-full overflow-x-auto mt-2">
+          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">
-                  <th className="pb-3 px-4 w-12 text-center">Status</th>
-                  <th className="pb-3 px-4">Activity</th>
-                  <th className="pb-3 px-4">Project</th>
-                  <th className="pb-3 px-4 text-right">Time</th>
+                <tr className="border-b border-[#E6E9E7] dark:border-white/[0.07]">
+                  {['Status', 'Activity', 'Project', 'Time'].map((h) => (
+                    <th key={h} className="pb-2.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#929994]">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="text-sm divide-y divide-gray-50 dark:divide-gray-800/50">
-                <tr className="transition-colors group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-3 px-4 text-center">
-                    <CheckCircle size={16} className="text-primary inline-block" />
-                  </td>
-                  <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white group-hover:text-primary transition-colors">Concrete poured</td>
-                  <td className="py-3 px-4"><span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full text-[11px] font-bold">Alpha</span></td>
-                  <td className="py-3 px-4 text-right text-gray-500 dark:text-gray-400 text-xs font-medium">
-                    <div className="flex items-center justify-end gap-1.5"><Clock size={12} /> 2 hours ago</div>
-                  </td>
-                </tr>
-                <tr className="transition-colors group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-3 px-4 text-center">
-                    <CheckCircle size={16} className="text-primary inline-block" />
-                  </td>
-                  <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white group-hover:text-primary transition-colors">Blueprint approval</td>
-                  <td className="py-3 px-4"><span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full text-[11px] font-bold">Beta</span></td>
-                  <td className="py-3 px-4 text-right text-gray-500 dark:text-gray-400 text-xs font-medium">
-                    <div className="flex items-center justify-end gap-1.5"><Clock size={12} /> 5 hours ago</div>
-                  </td>
-                </tr>
-                <tr className="transition-colors group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-3 px-4 text-center">
-                    <CheckCircle size={16} className="text-primary inline-block" />
-                  </td>
-                  <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white group-hover:text-primary transition-colors">Material delivered</td>
-                  <td className="py-3 px-4"><span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full text-[11px] font-bold">Gamma</span></td>
-                  <td className="py-3 px-4 text-right text-gray-500 dark:text-gray-400 text-xs font-medium">
-                    <div className="flex items-center justify-end gap-1.5"><Clock size={12} /> 1 day ago</div>
-                  </td>
-                </tr>
+              <tbody>
+                {[
+                  { activity: 'Concrete poured', project: 'Alpha', time: '2 hours ago', status: 'done' },
+                  { activity: 'Blueprint approval', project: 'Beta', time: '5 hours ago', status: 'done' },
+                  { activity: 'Material delivered', project: 'Gamma', time: '1 day ago', status: 'done' },
+                ].map((row) => (
+                  <tr
+                    key={row.activity}
+                    className="border-b border-[#F5F6F5] dark:border-white/[0.04] hover:bg-[#F7F8F7] dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
+                  >
+                    <td className="py-3 px-3">
+                      <CheckCircle size={14} className="text-[#079B68]" strokeWidth={1.75} />
+                    </td>
+                    <td className="py-3 px-3 text-sm font-medium text-[#171A18] dark:text-[#EFF1F0] group-hover:text-[#079B68] transition-colors">
+                      {row.activity}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="bg-[#F5F6F5] dark:bg-white/[0.06] text-[#626A66] dark:text-[#9BA49E] px-2 py-0.5 rounded-full text-[11px] font-medium">
+                        {row.project}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5 text-xs text-[#929994]">
+                        <Clock size={11} /> {row.time}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </Card>
 
       </div>
     </motion.div>

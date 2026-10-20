@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import clsx from 'clsx';
@@ -13,24 +13,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-sans transition-colors relative">
+    <div className="flex h-screen overflow-hidden bg-[#F7F8F7] dark:bg-[#111312] font-sans transition-colors relative">
       {/* Mobile backdrop */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-30 md:hidden transition-opacity"
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-30 md:hidden transition-opacity"
           onClick={() => dispatch(setSidebarOpen(false))}
         />
       )}
+
       <Sidebar />
-      <div className={clsx(
-        "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-        sidebarOpen ? "ml-0 md:ml-64" : "ml-0 md:ml-20"
-      )}>
+
+      <div
+        className={clsx(
+          'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden',
+          sidebarOpen ? 'ml-0 md:ml-60' : 'ml-0 md:ml-16'
+        )}
+      >
         <Header />
-        <main className="flex-1 overflow-auto p-4 md:p-8 bg-background transition-colors">
+        <main className="flex-1 overflow-auto p-5 md:p-6 lg:p-8 bg-[#F7F8F7] dark:bg-[#111312] transition-colors custom-scrollbar">
           {children}
         </main>
       </div>
+
       <ThemePreferences />
     </div>
   );

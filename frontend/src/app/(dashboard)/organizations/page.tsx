@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, Search, Building2, MapPin, Phone } from 'lucide-react';
+import { Plus, Building2, MapPin, Phone, Mail, ShieldCheck, Calendar, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { fetchOrganizations } from '../../../store/slices/organizationsSlice';
 import { RootState, AppDispatch } from '../../../store/store';
 import { Organization } from '../../../types';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
+import { DataView, DataTable, DataGrid, OrganizationCard, Column } from '@/components/common/dataview';
 
 export default function OrganizationsPage() {
   const router = useRouter();
@@ -24,107 +22,156 @@ export default function OrganizationsPage() {
     }
   }, [status, dispatch]);
 
-  const isLoading = status === 'loading';
+  const filteredOrgs = useMemo(() => {
+    return (organizations || []).filter(
+      (org) =>
+        org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        org.gst_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        org.address?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [organizations, searchTerm]);
 
-  const filteredOrgs = organizations?.filter((org) =>
-    org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const columns: Column<Organization>[] = [
+    {
+      key: 'org',
+      header: 'Organization',
+      render: (org) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] rounded-[8px] flex items-center justify-center shrink-0 border border-[#079B68]/15">
+            {org.logo ? (
+              <img src={org.logo} alt={org.name} className="w-full h-full object-cover rounded-[8px]" />
+            ) : (
+              <Building2 size={16} className="text-[#079B68]" strokeWidth={1.75} />
+            )}
+          </div>
+          <div>
+            <span className="font-semibold text-sm text-[#171A18] dark:text-[#EFF1F0] group-hover:text-[#079B68] transition-colors">
+              {org.name}
+            </span>
+            <span className="block text-[11px] text-[#929994]">ID: {org.id.slice(0, 8)}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'Contact',
+      render: (org) => (
+        <div className="flex flex-col gap-0.5 text-xs text-[#626A66] dark:text-[#9BA49E]">
+          {org.email ? (
+            <span className="flex items-center gap-1.5">
+              <Mail size={12} className="text-[#929994]" /> {org.email}
+            </span>
+          ) : (
+            <span className="text-[#929994] italic text-[11px]">No email</span>
+          )}
+          {org.phone && (
+            <span className="flex items-center gap-1.5 text-[#929994]">
+              <Phone size={12} /> {org.phone}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'location',
+      header: 'Location',
+      render: (org) =>
+        org.address ? (
+          <div className="flex items-center gap-1.5 max-w-[220px] truncate text-xs text-[#626A66] dark:text-[#9BA49E]" title={org.address}>
+            <MapPin size={13} className="text-[#929994] shrink-0" />
+            <span className="truncate">{org.address}</span>
+          </div>
+        ) : (
+          <span className="text-[#929994] italic text-[11px]">No address</span>
+        ),
+    },
+    {
+      key: 'gst',
+      header: 'GST Number',
+      render: (org) =>
+        org.gst_number ? (
+          <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-[5px] bg-[#F5F6F5] dark:bg-white/[0.04] text-[#171A18] dark:text-[#EFF1F0] border border-[#E6E9E7] dark:border-white/[0.08]">
+            <ShieldCheck size={11} className="text-[#079B68]" />
+            {org.gst_number}
+          </span>
+        ) : (
+          <span className="text-[#929994] text-[11px]">&mdash;</span>
+        ),
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      render: (org) => (
+        <span className="text-xs text-[#929994] whitespace-nowrap flex items-center gap-1.5">
+          <Calendar size={12} />
+          {new Date(org.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      align: 'right',
+      render: () => (
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[#929994] group-hover:text-[#079B68] group-hover:bg-[#E7F5EF] dark:group-hover:bg-[rgba(7,155,104,0.15)] transition-colors">
+          <ArrowUpRight size={14} strokeWidth={2} />
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Organizations</h1>
-        <Button onClick={() => router.push('/organizations/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+    <DataView
+      title="Organizations"
+      subtitle={`${(organizations || []).length} registered enterprise and client entities`}
+      action={
+        <Button
+          onClick={() => router.push('/organizations/new')}
+          className="h-9 px-4 text-sm font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] shadow-sm gap-1.5 cursor-pointer transition-colors"
+        >
+          <Plus size={15} strokeWidth={2.25} />
           New Organization
         </Button>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="max-w-md w-full relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9 bg-white dark:bg-card border-border"
-            placeholder="Search organizations..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center p-12">
-          <ConstructionLoader size="md" />
-        </div>
-      ) : error ? (
-        <div className="text-destructive p-4 text-center">
-          Failed to load organizations. Please try again.
-        </div>
-      ) : filteredOrgs.length === 0 ? (
-        <div className="text-center p-12 text-muted-foreground bg-white dark:bg-card rounded-2xl border border-border">
-          No organizations found matching your search.
-        </div>
-      ) : (
-        <div className="mt-2 w-full overflow-x-auto bg-white dark:bg-card rounded-2xl border border-border shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-gray-50/50 dark:bg-gray-900/50 text-xs text-muted-foreground font-bold uppercase tracking-wider">
-                <th className="p-4 font-semibold">Name</th>
-                <th className="p-4 font-semibold">Contact</th>
-                <th className="p-4 font-semibold">Location</th>
-                <th className="p-4 font-semibold">GST Number</th>
-                <th className="p-4 font-semibold">Created</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm divide-y divide-border">
-              <AnimatePresence>
-                {filteredOrgs.map((org: Organization) => (
-                  <motion.tr 
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    key={org.id}
-                    onClick={() => router.push(`/organizations/${org.id}`)}
-                    className="group cursor-pointer hover:bg-primary/5 transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                          {org.logo ? (
-                            <img src={org.logo} alt={org.name} className="w-full h-full object-cover rounded-xl" />
-                          ) : (
-                            <Building2 size={18} className="text-primary" />
-                          )}
-                        </div>
-                        <div className="font-bold text-foreground group-hover:text-primary transition-colors">{org.name}</div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-foreground">
-                      <div className="flex flex-col">
-                        <span className="text-sm">{org.email || '-'}</span>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Phone size={12} /> {org.phone || '-'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-muted-foreground">
-                      <div className="flex items-center gap-1.5 line-clamp-1"><MapPin size={14} /> {org.address || '-'}</div>
-                    </td>
-                    <td className="p-4 text-muted-foreground">
-                      {org.gst_number || '-'}
-                    </td>
-                    <td className="p-4 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(org.created_at).toLocaleDateString()}
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      }
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      searchPlaceholder="Search organizations by name, GST, address…"
+      isLoading={status === 'loading'}
+      error={error}
+      onRetry={() => dispatch(fetchOrganizations())}
+      isEmpty={filteredOrgs.length === 0}
+      emptyIcon={Building2}
+      emptyTitle="No organizations found"
+      emptyDescription={
+        searchTerm
+          ? `No results match "${searchTerm}". Try a different keyword.`
+          : 'Get started by creating your first client or vendor organization.'
+      }
+      emptyActionText={searchTerm ? 'Clear Search' : 'New Organization'}
+      onEmptyAction={() => {
+        if (searchTerm) {
+          setSearchTerm('');
+        } else {
+          router.push('/organizations/new');
+        }
+      }}
+      tableView={
+        <DataTable
+          columns={columns}
+          data={filteredOrgs}
+          keyExtractor={(org) => org.id}
+          onRowClick={(org) => router.push(`/organizations/${org.id}`)}
+        />
+      }
+      gridView={
+        <DataGrid
+          data={filteredOrgs}
+          keyExtractor={(org) => org.id}
+          renderItem={(org) => <OrganizationCard organization={org} />}
+        />
+      }
+    />
   );
 }

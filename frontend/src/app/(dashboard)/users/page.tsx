@@ -1,21 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, Search, User as UserIcon, Shield, Mail } from 'lucide-react';
+import { Plus, User as UserIcon, Shield, Mail, Phone, Calendar, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { fetchUsers } from '../../../store/slices/usersSlice';
 import { RootState, AppDispatch } from '../../../store/store';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
+import { User } from '../../../types';
+import { DataView, DataTable, DataGrid, UserCard, Column } from '@/components/common/dataview';
+
+const ROLES = ['All', 'Admin', 'Project Manager', 'Site Engineer', 'Contractor', 'Supplier'];
+
+const ROLE_CONFIG: Record<string, { bg: string; text: string }> = {
+  Admin:             { bg: '#F3EFFE', text: '#7C4DFF' },
+  'Project Manager': { bg: '#EBF2FF', text: '#2563EB' },
+  'Site Engineer':   { bg: '#E7F5EF', text: '#079B68' },
+  Contractor:        { bg: '#FEF9EC', text: '#D5A04A' },
+  Supplier:          { bg: '#F9EDEF', text: '#B85B63' },
+};
 
 export default function UsersPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { users, status, error } = useSelector((state: RootState) => state.users);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeRole, setActiveRole] = useState('All');
 
   useEffect(() => {
     if (status === 'idle') {
@@ -23,116 +33,178 @@ export default function UsersPage() {
     }
   }, [status, dispatch]);
 
-  const filteredUsers = users?.filter((user) =>
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredUsers = useMemo(() => {
+    return (users || []).filter((user) => {
+      const matchSearch =
+        user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchRole = activeRole === 'All' || user.role === activeRole;
+      return matchSearch && matchRole;
+    });
+  }, [users, searchTerm, activeRole]);
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'Admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'Project Manager': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'Site Engineer': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'Contractor': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'Supplier': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-    }
-  };
+  const counts = useMemo(() => {
+    return ROLES.reduce<Record<string, number>>((acc, r) => {
+      acc[r] = r === 'All' ? (users || []).length : (users || []).filter((u) => u.role === r).length;
+      return acc;
+    }, {});
+  }, [users]);
+
+  const filterTabs = useMemo(() => {
+    return ROLES.map((r) => ({
+      key: r,
+      label: r,
+      count: counts[r] ?? 0,
+    }));
+  }, [counts]);
+
+  const columns: Column<User>[] = [
+    {
+      key: 'user',
+      header: 'User',
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] flex items-center justify-center shrink-0 overflow-hidden border border-[#079B68]/15">
+            {user.profile_photo ? (
+              <img src={user.profile_photo} alt={user.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-semibold text-xs text-[#079B68]">
+                {user.full_name.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <span className="font-semibold text-sm text-[#171A18] dark:text-[#EFF1F0] group-hover:text-[#079B68] transition-colors">
+              {user.full_name}
+            </span>
+            <span className="block text-[11px] text-[#929994]">ID: {user.id.slice(0, 8)}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'Contact',
+      render: (user) => (
+        <div className="flex flex-col gap-0.5 text-xs text-[#626A66] dark:text-[#9BA49E]">
+          <span className="flex items-center gap-1.5">
+            <Mail size={12} className="text-[#929994]" /> {user.email}
+          </span>
+          {user.phone && (
+            <span className="flex items-center gap-1.5 text-[#929994]">
+              <Phone size={12} /> {user.phone}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (user) => {
+        const roleCfg = ROLE_CONFIG[user.role] || { bg: '#F5F6F5', text: '#929994' };
+        return (
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+            style={{ background: roleCfg.bg, color: roleCfg.text }}
+          >
+            <Shield size={10} />
+            {user.role}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (user) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+            user.is_active ? 'bg-[#E7F5EF] text-[#079B68]' : 'bg-[#F9EDEF] text-[#B85B63]'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-[#079B68]' : 'bg-[#B85B63]'}`} />
+          {user.is_active ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: 'created',
+      header: 'Registered',
+      render: (user) => (
+        <span className="text-xs text-[#929994] whitespace-nowrap flex items-center gap-1.5">
+          <Calendar size={12} />
+          {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      align: 'right',
+      render: () => (
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[#929994] group-hover:text-[#079B68] group-hover:bg-[#E7F5EF] dark:group-hover:bg-[rgba(7,155,104,0.15)] transition-colors">
+          <ArrowUpRight size={14} strokeWidth={2} />
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Users</h1>
-        <Button onClick={() => router.push('/users/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+    <DataView
+      title="Team & Users"
+      subtitle={`${(users || []).length} registered team members and platform accounts`}
+      action={
+        <Button
+          onClick={() => router.push('/users/new')}
+          className="h-9 px-4 text-sm font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] shadow-sm gap-1.5 cursor-pointer transition-colors"
+        >
+          <Plus size={15} strokeWidth={2.25} />
           New User
         </Button>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="max-w-md w-full relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9 bg-white dark:bg-card border-border"
-            placeholder="Search users by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {status === 'loading' ? (
-        <div className="flex justify-center p-12">
-          <ConstructionLoader size="md" />
-        </div>
-      ) : status === 'failed' ? (
-        <div className="text-destructive p-4 text-center">
-          {error || 'Failed to load users.'}
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        <div className="text-center p-12 text-muted-foreground bg-white dark:bg-card rounded-2xl border border-border">
-          No users found.
-        </div>
-      ) : (
-        <div className="mt-2 w-full overflow-x-auto bg-white dark:bg-card rounded-2xl border border-border shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-gray-50/50 dark:bg-gray-900/50 text-xs text-muted-foreground font-bold uppercase tracking-wider">
-                <th className="p-4 font-semibold">User</th>
-                <th className="p-4 font-semibold">Contact</th>
-                <th className="p-4 font-semibold">Role</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold">Joined</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm divide-y divide-border">
-              <AnimatePresence>
-                {filteredUsers.map((user) => (
-                  <motion.tr 
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    key={user.id}
-                    onClick={() => router.push(`/users/${user.id}`)}
-                    className="group cursor-pointer hover:bg-primary/5 transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
-                          {user.profile_photo ? (
-                            <img src={user.profile_photo} alt={user.full_name} className="w-full h-full object-cover" />
-                          ) : (
-                            <UserIcon size={18} className="text-primary" />
-                          )}
-                        </div>
-                        <div className="font-bold text-foreground group-hover:text-primary transition-colors">{user.full_name}</div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-foreground">
-                      <span className="text-sm flex items-center gap-1.5"><Mail size={12} className="text-muted-foreground" /> {user.email}</span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border inline-flex items-center gap-1 ${getRoleColor(user.role)}`}>
-                        <Shield size={10} />
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${user.is_active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
-                        {user.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      }
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      searchPlaceholder="Search users by name, email, or role…"
+      filterTabs={filterTabs}
+      activeFilterTab={activeRole}
+      onFilterTabChange={setActiveRole}
+      isLoading={status === 'loading'}
+      error={error}
+      onRetry={() => dispatch(fetchUsers())}
+      isEmpty={filteredUsers.length === 0}
+      emptyIcon={UserIcon}
+      emptyTitle="No users found"
+      emptyDescription={
+        searchTerm || activeRole !== 'All'
+          ? 'No team accounts match your filter criteria.'
+          : 'Invite engineers, managers, and contractors to your project management workspace.'
+      }
+      emptyActionText={searchTerm || activeRole !== 'All' ? 'Reset Filters' : 'New User'}
+      onEmptyAction={() => {
+        if (searchTerm || activeRole !== 'All') {
+          setSearchTerm('');
+          setActiveRole('All');
+        } else {
+          router.push('/users/new');
+        }
+      }}
+      tableView={
+        <DataTable
+          columns={columns}
+          data={filteredUsers}
+          keyExtractor={(u) => u.id}
+          onRowClick={(u) => router.push(`/users/${u.id}`)}
+        />
+      }
+      gridView={
+        <DataGrid
+          data={filteredUsers}
+          keyExtractor={(u) => u.id}
+          renderItem={(u) => <UserCard user={u} />}
+        />
+      }
+    />
   );
 }

@@ -1,21 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, Search, HardHat, Phone, Calendar } from 'lucide-react';
+import { Plus, HardHat, Phone, Calendar, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { fetchWorkers } from '../../../store/slices/workersSlice';
 import { RootState, AppDispatch } from '../../../store/store';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
+import { Worker } from '../../../types';
+import { DataView, DataTable, DataGrid, WorkerCard, Column } from '@/components/common/dataview';
 
 export default function WorkersPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { workers, status, error } = useSelector((state: RootState) => state.workers);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeStatusFilter, setActiveStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
 
   useEffect(() => {
     if (status === 'idle') {
@@ -23,98 +23,178 @@ export default function WorkersPage() {
     }
   }, [status, dispatch]);
 
-  const filteredWorkers = workers?.filter((w) =>
-    w.worker_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    w.trade.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredWorkers = useMemo(() => {
+    return (workers || []).filter((w) => {
+      const matchSearch =
+        w.worker_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        w.trade.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (w.contractor_name && w.contractor_name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchStatus =
+        activeStatusFilter === 'All'
+          ? true
+          : activeStatusFilter === 'Active'
+          ? w.is_active
+          : !w.is_active;
+
+      return matchSearch && matchStatus;
+    });
+  }, [workers, searchTerm, activeStatusFilter]);
+
+  const filterTabs = useMemo(() => {
+    const total = (workers || []).length;
+    const active = (workers || []).filter((w) => w.is_active).length;
+    const inactive = total - active;
+
+    return [
+      { key: 'All', label: 'All Workers', count: total },
+      { key: 'Active', label: 'Active', count: active },
+      { key: 'Inactive', label: 'Inactive', count: inactive },
+    ];
+  }, [workers]);
+
+  const columns: Column<Worker>[] = [
+    {
+      key: 'worker',
+      header: 'Worker Name',
+      render: (w) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] rounded-full flex items-center justify-center shrink-0 border border-[#079B68]/15">
+            <HardHat size={16} className="text-[#079B68]" strokeWidth={1.75} />
+          </div>
+          <div>
+            <span className="font-semibold text-sm text-[#171A18] dark:text-[#EFF1F0] group-hover:text-[#079B68] transition-colors">
+              {w.worker_name}
+            </span>
+            {w.contractor_name && (
+              <span className="block text-[11px] text-[#929994]">via {w.contractor_name}</span>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'trade',
+      header: 'Trade',
+      render: (w) => (
+        <span className="inline-flex px-2 py-0.5 rounded-[5px] bg-[#F5F6F5] dark:bg-white/[0.04] text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0] border border-[#E6E9E7] dark:border-white/[0.08]">
+          {w.trade}
+        </span>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'Contact',
+      render: (w) =>
+        w.phone ? (
+          <span className="flex items-center gap-1.5 text-xs text-[#626A66] dark:text-[#9BA49E]">
+            <Phone size={12} className="text-[#929994]" /> {w.phone}
+          </span>
+        ) : (
+          <span className="text-[#929994] italic text-[11px]">No phone</span>
+        ),
+    },
+    {
+      key: 'wage',
+      header: 'Daily Wage',
+      render: (w) => (
+        <span className="text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0]">
+          {w.daily_wage ? `Rs. ${w.daily_wage.toLocaleString()}` : <span className="text-[#929994] font-normal">&mdash;</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (w) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+            w.is_active ? 'bg-[#E7F5EF] text-[#079B68]' : 'bg-[#F9EDEF] text-[#B85B63]'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${w.is_active ? 'bg-[#079B68]' : 'bg-[#B85B63]'}`} />
+          {w.is_active ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: 'joined',
+      header: 'Joined',
+      render: (w) => (
+        <span className="text-xs text-[#929994] whitespace-nowrap flex items-center gap-1.5">
+          <Calendar size={12} />
+          {w.joining_date
+            ? new Date(w.joining_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      align: 'right',
+      render: () => (
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-[6px] text-[#929994] group-hover:text-[#079B68] group-hover:bg-[#E7F5EF] dark:group-hover:bg-[rgba(7,155,104,0.15)] transition-colors">
+          <ArrowUpRight size={14} strokeWidth={2} />
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1400px] mx-auto w-full p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Workers</h1>
-        <Button onClick={() => router.push('/workers/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+    <DataView
+      title="Site Workers"
+      subtitle={`${(workers || []).length} registered field workforce and trade specialists`}
+      action={
+        <Button
+          onClick={() => router.push('/workers/new')}
+          className="h-9 px-4 text-sm font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] shadow-sm gap-1.5 cursor-pointer transition-colors"
+        >
+          <Plus size={15} strokeWidth={2.25} />
           New Worker
         </Button>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="max-w-md w-full relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9 bg-white dark:bg-card border-border"
-            placeholder="Search workers by name or trade..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {status === 'loading' ? (
-        <div className="flex justify-center p-12">
-          <ConstructionLoader size="md" />
-        </div>
-      ) : status === 'failed' ? (
-        <div className="text-destructive p-4 text-center">
-          {error || 'Failed to load workers.'}
-        </div>
-      ) : filteredWorkers.length === 0 ? (
-        <div className="text-center p-12 text-muted-foreground bg-white dark:bg-card rounded-2xl border border-border">
-          No workers found.
-        </div>
-      ) : (
-        <div className="mt-2 w-full overflow-x-auto bg-white dark:bg-card rounded-2xl border border-border shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-gray-50/50 dark:bg-gray-900/50 text-xs text-muted-foreground font-bold uppercase tracking-wider">
-                <th className="p-4 font-semibold">Name</th>
-                <th className="p-4 font-semibold">Contact</th>
-                <th className="p-4 font-semibold">Trade</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold">Joined</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm divide-y divide-border">
-              <AnimatePresence>
-                {filteredWorkers.map((worker) => (
-                  <motion.tr 
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    key={worker.id}
-                    onClick={() => router.push(`/workers/${worker.id}`)}
-                    className="group cursor-pointer hover:bg-primary/5 transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                          <HardHat size={18} className="text-primary" />
-                        </div>
-                        <div className="font-bold text-foreground group-hover:text-primary transition-colors">{worker.worker_name}</div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-foreground">
-                      <span className="text-sm flex items-center gap-1.5"><Phone size={12} className="text-muted-foreground" /> {worker.phone || '-'}</span>
-                    </td>
-                    <td className="p-4 font-medium">
-                      {worker.trade}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${worker.is_active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
-                        {worker.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1.5">
-                      <Calendar size={12} /> {worker.joining_date ? new Date(worker.joining_date).toLocaleDateString() : '-'}
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      }
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      searchPlaceholder="Search workers by name, trade, contractor…"
+      filterTabs={filterTabs}
+      activeFilterTab={activeStatusFilter}
+      onFilterTabChange={(key) => setActiveStatusFilter(key as any)}
+      isLoading={status === 'loading'}
+      error={error}
+      onRetry={() => dispatch(fetchWorkers())}
+      isEmpty={filteredWorkers.length === 0}
+      emptyIcon={HardHat}
+      emptyTitle="No workers found"
+      emptyDescription={
+        searchTerm || activeStatusFilter !== 'All'
+          ? 'No workers match your search and filter criteria.'
+          : 'Add your site laborers, masons, carpenters, and technicians to monitor daily attendance and wages.'
+      }
+      emptyActionText={searchTerm || activeStatusFilter !== 'All' ? 'Reset Filters' : 'New Worker'}
+      onEmptyAction={() => {
+        if (searchTerm || activeStatusFilter !== 'All') {
+          setSearchTerm('');
+          setActiveStatusFilter('All');
+        } else {
+          router.push('/workers/new');
+        }
+      }}
+      tableView={
+        <DataTable
+          columns={columns}
+          data={filteredWorkers}
+          keyExtractor={(w) => w.id}
+          onRowClick={(w) => router.push(`/workers/${w.id}`)}
+        />
+      }
+      gridView={
+        <DataGrid
+          data={filteredWorkers}
+          keyExtractor={(w) => w.id}
+          renderItem={(w) => <WorkerCard worker={w} />}
+        />
+      }
+    />
   );
 }

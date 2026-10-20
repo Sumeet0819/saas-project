@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Menu, Search, Bell, Settings, Building2 } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Bell, Settings, Building2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleSidebar, togglePreferences, setActiveOrganization } from '../../store/slices/uiSlice';
 import { fetchOrganizations } from '../../store/slices/organizationsSlice';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Header() {
   const dispatch = useAppDispatch();
@@ -21,74 +21,88 @@ export default function Header() {
 
   useEffect(() => {
     if (organizations.length > 0 && !activeOrganizationId) {
-      // Default to user's organization if available, or the first one
-      const userOrg = organizations.find(o => o.id === user?.organization_id);
+      const userOrg = organizations.find((o) => o.id === user?.organization_id);
       dispatch(setActiveOrganization(userOrg ? userOrg.id : organizations[0].id));
     }
   }, [organizations, user, activeOrganizationId, dispatch]);
 
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'AU';
+
+  const currentOrg =
+    organizations.find((org) => org.id === activeOrganizationId) ||
+    organizations.find((o) => o.id === user?.organization_id) ||
+    organizations[0];
+
+  const organizationName = currentOrg?.name || 'Apex Construction';
+
   return (
-    <header className="h-20 bg-transparent flex items-center justify-between px-4 lg:px-8 z-30 sticky top-0">
-      <div className="flex items-center h-full">
-        <button 
-          className="flex items-center justify-center p-2 bg-white dark:bg-gray-800 shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl mr-4 transition-colors" 
+    <header className="h-16 bg-white dark:bg-[#1B1E1C] flex items-center justify-between px-4 lg:px-6 z-30 sticky top-0 border-b border-[#E6E9E7] dark:border-white/[0.08]">
+      {/* Left: mobile toggle + org name display */}
+      <div className="flex items-center gap-3">
+        {/* Mobile menu toggle only visible on small screens */}
+        <button
+          className="md:hidden w-8 h-8 flex items-center justify-center rounded-[7px] text-[#626A66] dark:text-[#9BA49E] hover:bg-[#F5F6F5] dark:hover:bg-white/[0.05] hover:text-[#171A18] dark:hover:text-[#EFF1F0] transition-colors cursor-pointer"
           onClick={() => dispatch(toggleSidebar())}
-          aria-label="Toggle Sidebar"
+          aria-label="Toggle sidebar"
         >
-          <Menu size={20} />
+          <Menu size={18} strokeWidth={1.75} />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <Building2 size={16} className="text-gray-400" />
-          <Select 
-            value={activeOrganizationId || ''}
-            onValueChange={(val) => dispatch(setActiveOrganization(val))}
-          >
-            <SelectTrigger className="bg-transparent border-none text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-0 h-auto p-0 min-w-[150px] shadow-none data-[state=open]:bg-transparent">
-              <SelectValue placeholder={organizations.length === 0 ? "Loading..." : "Select Organization"}>
-                {organizations.find(org => org.id === activeOrganizationId)?.name || (organizations.length === 0 ? "Loading..." : "Select Organization")}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {organizations.map(org => (
-                <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Organization Name (display only) */}
+        <div className="flex items-center gap-2 h-8 px-3 rounded-[7px] border border-[#E6E9E7] dark:border-white/[0.08] bg-[#F7F8F7] dark:bg-white/[0.03]">
+          <Building2 size={14} className="text-[#079B68] dark:text-[#0AAE78] shrink-0" strokeWidth={1.75} />
+          <span className="text-sm font-medium text-[#171A18] dark:text-[#EFF1F0] tracking-tight truncate max-w-[200px] sm:max-w-none">
+            {organizationName}
+          </span>
         </div>
       </div>
-      
-      <div className="flex items-center space-x-3 sm:space-x-5">
-        <button className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="Search">
-          <Search size={18} strokeWidth={2.5} />
-        </button>
-        
-        <button className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors relative" aria-label="Notifications">
-          <Bell size={18} strokeWidth={2.5} />
-          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+
+      {/* Right: actions + avatar */}
+      <div className="flex items-center gap-1">
+        {/* Notifications */}
+        <button
+          className="relative w-8 h-8 flex items-center justify-center rounded-[7px] text-[#626A66] dark:text-[#9BA49E] hover:bg-[#F5F6F5] dark:hover:bg-white/[0.05] hover:text-[#171A18] dark:hover:text-[#EFF1F0] transition-colors cursor-pointer"
+          aria-label="Notifications"
+        >
+          <Bell size={17} strokeWidth={1.75} />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#B85B63] rounded-full" />
         </button>
 
-        <button 
-          onClick={() => dispatch(togglePreferences())}
-          className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors hidden sm:flex" 
+        {/* Settings */}
+        <Link
+          href="/settings"
+          className="hidden sm:flex w-8 h-8 items-center justify-center rounded-[7px] text-[#626A66] dark:text-[#9BA49E] hover:bg-[#F5F6F5] dark:hover:bg-white/[0.05] hover:text-[#171A18] dark:hover:text-[#EFF1F0] transition-colors cursor-pointer"
           aria-label="Settings"
+          title="Settings"
         >
-          <Settings size={18} strokeWidth={2.5} />
-        </button>
-        
-        <div className="hidden sm:block w-px h-8 bg-gray-200 dark:bg-gray-800 mx-2"></div>
-        
-        <button className="flex items-center space-x-3 group outline-none">
-          <img 
-            src={user?.profile_photo || "https://lh3.googleusercontent.com/aida-public/AB6AXuCSubHI-QwbO-uFuCN2iZ6P7r0HLhScutsjb_I_Uq5Y8VHxtDNbPC7Mw6dizCxI5YpwtTlRcb7En2lTGtgtEtMb_JT5U6qJX5hFaX7F8vbdE8Y86Jgn-zKph5QaKKLRHEKeNCK4qX5qsUxGSeSMuaf_a2SVPGSs7Cl1H0TdfTw6nM2IJEa9fD8WYuB5NsaIT0QxRJlisXW0HN-OFnAeH9m6SG_R7upSUKepl7-cnTn1UjVtTUsA5vWVgoL7S8EL8HsrKOyahl5Zslyo"} 
-            alt="Profile" 
-            className="w-10 h-10 rounded-full object-cover shadow-sm group-hover:ring-2 group-hover:ring-blue-500/50 transition-all" 
-          />
+          <Settings size={17} strokeWidth={1.75} />
+        </Link>
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-[#E6E9E7] dark:bg-white/[0.08] mx-2 hidden sm:block" />
+
+        {/* User */}
+        <Link href="/settings" className="flex items-center gap-2.5 group outline-none cursor-pointer" title="Manage Profile & Settings">
+          {user?.profile_photo ? (
+            <img
+              src={user.profile_photo}
+              alt="Profile"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-transparent group-hover:ring-[#079B68]/30 transition-all"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] flex items-center justify-center ring-2 ring-transparent group-hover:ring-[#079B68]/30 transition-all">
+              <span className="text-[11px] font-semibold text-[#079B68]">{initials}</span>
+            </div>
+          )}
           <div className="hidden md:flex flex-col items-start text-left">
-            <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight group-hover:text-primary dark:group-hover:text-primary transition-colors">{user?.full_name || 'Admin User'}</span>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{user?.role || 'System Admin'}</span>
+            <span className="text-[13px] font-semibold text-[#171A18] dark:text-[#EFF1F0] leading-tight group-hover:text-[#079B68] transition-colors">
+              {user?.full_name || 'Admin User'}
+            </span>
+            <span className="text-[11px] text-[#929994] leading-tight">{user?.role || 'System Admin'}</span>
           </div>
-        </button>
+        </Link>
       </div>
     </header>
   );
