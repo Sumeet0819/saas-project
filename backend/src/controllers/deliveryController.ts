@@ -4,7 +4,12 @@ import { Delivery } from '../types';
 
 export const getDeliveries = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('deliveries').select('*');
+    const { project_id } = req.query;
+    let query = supabase.from('deliveries').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

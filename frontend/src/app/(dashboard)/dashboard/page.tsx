@@ -1,18 +1,21 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProjects } from '../../../store/slices/projectsSlice';
 import { fetchWorkers } from '../../../store/slices/workersSlice';
+import { setActiveProject } from '../../../store/slices/uiSlice';
 import {
   Building2, Users, AlertTriangle, Box,
   ChevronDown, Briefcase, HardHat,
   Activity, Truck, ShieldCheck, CheckCircle, Clock,
   CloudRain, Wind, Thermometer, CalendarClock, CreditCard,
   UserCheck, PackageMinus, ClipboardList, Target, MoreHorizontal,
-  TrendingUp, TrendingDown, Info
+  TrendingUp, TrendingDown, Info, ArrowUpRight, X
 } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer
@@ -43,10 +46,11 @@ const container: Variants = {
   show: { opacity: 1, transition: { staggerChildren: 0.07 } },
 };
 
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Card({ children, className = '', style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <motion.div
       variants={fade}
+      style={style}
       className={`bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] p-5 shadow-[0_1px_4px_rgba(16,24,20,0.06)] ${className}`}
     >
       {children}
@@ -79,9 +83,10 @@ function TrendBadge({ value, positive }: { value: string; positive: boolean }) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { activeOrganizationId } = useAppSelector((state) => state.ui);
+  const { activeOrganizationId, activeProjectId } = useAppSelector((state) => state.ui);
   const { projects, status: projectsStatus } = useAppSelector((state) => state.projects);
   const { workers, status: workersStatus } = useAppSelector((state) => state.workers);
 
@@ -97,6 +102,11 @@ export default function DashboardPage() {
   const orgWorkers = React.useMemo(
     () => (activeOrganizationId ? workers.filter((w) => w.organization_id === activeOrganizationId) : []),
     [workers, activeOrganizationId]
+  );
+
+  const selectedProject = React.useMemo(
+    () => (activeProjectId ? projects.find((p) => p.id === activeProjectId) : null),
+    [projects, activeProjectId]
   );
 
   const activeProjectsCount = orgProjects.filter((p) => p.status === 'Active').length;
@@ -116,12 +126,53 @@ export default function DashboardPage() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="max-w-[1600px] mx-auto w-full">
-      {/* Page heading */}
-      <motion.div variants={fade} className="mb-6">
-        <p className="text-xs text-[#929994] mb-0.5">{currentDate}</p>
-        <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">
-          Project Report
-        </h1>
+      {/* Page heading & Active Project Context Banner */}
+      <motion.div variants={fade} className="mb-6 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p className="text-xs text-[#929994] mb-0.5">{currentDate}</p>
+            <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">
+              Executive Dashboard
+            </h1>
+          </div>
+        </div>
+
+        {selectedProject && (
+          <div className="bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.12)] border border-[#079B68]/20 rounded-[10px] p-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-[7px] bg-[#079B68] text-white flex items-center justify-center shrink-0">
+                <Briefcase size={15} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#171A18] dark:text-[#EFF1F0]">
+                  Project Active Context: <span className="text-[#079B68]">{selectedProject.project_name}</span> ({selectedProject.project_code})
+                </p>
+                <p className="text-[11px] text-[#929994]">
+                  {selectedProject.project_type} • Status: {selectedProject.status} • Client: {selectedProject.client_name || 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => router.push(`/projects/${selectedProject.id}`)}
+                className="h-8 px-3 text-xs font-semibold bg-[#079B68] hover:bg-[#087A55] text-white rounded-[7px] gap-1 cursor-pointer shadow-sm"
+              >
+                Open 360° Workspace <ArrowUpRight size={13} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => dispatch(setActiveProject(null))}
+                className="h-8 px-2.5 text-xs text-[#929994] hover:text-[#171A18] rounded-[7px] cursor-pointer"
+                title="Reset to all projects view"
+              >
+                <X size={13} /> Clear
+              </Button>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* ── Minimal KPI row ── */}

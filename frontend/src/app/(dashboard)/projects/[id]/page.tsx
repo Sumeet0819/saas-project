@@ -1,26 +1,44 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { fetchProjectById, fetchProjectMembers } from '../../../../store/slices/projectsSlice';
+import { fetchOrganizations } from '../../../../store/slices/organizationsSlice';
+import { fetchSiteActivitiesByProject } from '../../../../store/slices/siteActivitiesSlice';
+import { fetchSiteIssuesByProject } from '../../../../store/slices/siteIssuesSlice';
+import { fetchSitePhotosByProject } from '../../../../store/slices/sitePhotosSlice';
+import { fetchDailyLogsByProject } from '../../../../store/slices/dailyLogsSlice';
+import { fetchInventoryByProject } from '../../../../store/slices/materialInventorySlice';
+import { fetchMaterialRequests } from '../../../../store/slices/materialRequestsSlice';
+import { fetchMaterialMaster } from '../../../../store/slices/materialMasterSlice';
+import { fetchWorkers } from '../../../../store/slices/workersSlice';
+import { setActiveProject } from '../../../../store/slices/uiSlice';
+
 import {
-  ArrowLeft, Building, MapPin, Calendar, DollarSign,
-  Building2, Edit, AlertTriangle, BarChart3, Clock
+  ArrowLeft, Building, Edit, AlertTriangle,
+  LayoutDashboard, ClipboardList, Layers, Camera,
+  AlertCircle, Package, Users, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { fetchProjectById } from '../../../../store/slices/projectsSlice';
-import { fetchOrganizations } from '../../../../store/slices/organizationsSlice';
-import { RootState, AppDispatch } from '../../../../store/store';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ConstructionLoader } from '@/components/ui/ConstructionLoader';
 import { motion, Variants } from 'framer-motion';
+
+// Tab subcomponents
+import { ProjectOverviewTab } from '@/components/projects/ProjectOverviewTab';
+import { ProjectDprTab } from '@/components/projects/ProjectDprTab';
+import { ProjectActivitiesTab } from '@/components/projects/ProjectActivitiesTab';
+import { ProjectPhotosTab } from '@/components/projects/ProjectPhotosTab';
+import { ProjectIssuesTab } from '@/components/projects/ProjectIssuesTab';
+import { ProjectMaterialsTab } from '@/components/projects/ProjectMaterialsTab';
+import { ProjectTeamTab } from '@/components/projects/ProjectTeamTab';
+import { CreateIssueModal } from '@/components/projects/CreateIssueModal';
+import { CreateDprModal } from '@/components/projects/CreateDprModal';
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 24 } },
-};
-const container: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
@@ -44,51 +62,61 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-3 py-3 border-b border-[#E6E9E7] dark:border-white/[0.07] last:border-0">
-      <div className="w-8 h-8 rounded-[7px] bg-[#F5F6F5] dark:bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
-        <Icon size={14} className="text-[#929994]" strokeWidth={1.75} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#929994] mb-0.5">{label}</p>
-        <p className="text-sm font-medium text-[#171A18] dark:text-[#EFF1F0] truncate">{value || 'N/A'}</p>
-      </div>
-    </div>
-  );
-}
-
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <motion.div
-      variants={fade}
-      className="bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] shadow-[0_1px_4px_rgba(16,24,20,0.06)]"
-    >
-      <div className="px-5 py-3.5 border-b border-[#E6E9E7] dark:border-white/[0.07]">
-        <h2 className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0]">{title}</h2>
-      </div>
-      <div className="px-5 py-1">{children}</div>
-    </motion.div>
-  );
-}
-
 export default function ProjectDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
-  const { currentProject: project, status: projectStatus, error } = useSelector((state: RootState) => state.projects);
-  const { organizations, status: orgStatus } = useSelector((state: RootState) => state.organizations);
+  // Active Tab state
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
-  useEffect(() => { dispatch(fetchProjectById(projectId)); }, [projectId, dispatch]);
-  useEffect(() => { if (orgStatus === 'idle') dispatch(fetchOrganizations()); }, [orgStatus, dispatch]);
+  // Modals state
+  const [isDprModalOpen, setIsDprModalOpen] = useState(false);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+
+  // Redux Selectors
+  const { currentProject: project, projectMembers, status: projectStatus, error } = useAppSelector(
+    (state) => state.projects
+  );
+  const { organizations } = useAppSelector((state) => state.organizations);
+  const { activities } = useAppSelector((state) => state.siteActivities);
+  const { issues } = useAppSelector((state) => state.siteIssues);
+  const { photos } = useAppSelector((state) => state.sitePhotos);
+  const { logs } = useAppSelector((state) => state.dailyLogs);
+  const { inventory } = useAppSelector((state) => state.materialInventory);
+  const { requests } = useAppSelector((state) => state.materialRequests);
+  const { materials: masterMaterials } = useAppSelector((state) => state.materialMaster);
+  const { workers } = useAppSelector((state) => state.workers);
+
+  // Fetch project-scoped data & synchronize global activeProjectId
+  useEffect(() => {
+    if (projectId) {
+      dispatch(setActiveProject(projectId));
+      dispatch(fetchProjectById(projectId));
+      dispatch(fetchProjectMembers(projectId));
+      dispatch(fetchSiteActivitiesByProject(projectId));
+      dispatch(fetchSiteIssuesByProject(projectId));
+      dispatch(fetchSitePhotosByProject(projectId));
+      dispatch(fetchDailyLogsByProject(projectId));
+      dispatch(fetchInventoryByProject(projectId));
+      dispatch(fetchMaterialRequests());
+      dispatch(fetchMaterialMaster());
+      dispatch(fetchWorkers());
+      dispatch(fetchOrganizations());
+    }
+  }, [projectId, dispatch]);
 
   const org = organizations.find((o) => o.id === project?.organization_id);
 
-  if (projectStatus === 'loading') {
-    return <div className="flex justify-center py-24"><ConstructionLoader size="md" /></div>;
+  if (projectStatus === 'loading' && !project) {
+    return (
+      <div className="flex justify-center items-center py-32">
+        <ConstructionLoader size="md" />
+      </div>
+    );
   }
+
   if (error || !project) {
     return (
       <div className="max-w-md mx-auto py-24 text-center">
@@ -96,111 +124,179 @@ export default function ProjectDetailsPage() {
           <AlertTriangle size={24} className="text-[#B85B63]" strokeWidth={1.5} />
         </div>
         <p className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0] mb-1">Project not found</p>
-        <p className="text-xs text-[#929994] mb-4">We could not load the project details.</p>
-        <Button onClick={() => router.push('/projects')} className="bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] h-9 text-sm cursor-pointer">
+        <p className="text-xs text-[#929994] mb-4">We could not load the details for this project.</p>
+        <Button
+          onClick={() => router.push('/projects')}
+          className="bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] h-9 text-sm cursor-pointer"
+        >
           Back to Projects
         </Button>
       </div>
     );
   }
 
-  const budgetUsedPct = project.budget && project.estimated_cost
-    ? Math.min(Math.round((project.estimated_cost / project.budget) * 100), 100)
-    : 0;
+  const openIssuesCount = issues.filter((i) => i.status !== 'Resolved').length;
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="max-w-[1100px] mx-auto w-full">
-      {/* Header */}
-      <motion.div variants={fade} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
+    <div className="max-w-[1500px] mx-auto w-full space-y-6">
+      {/* ── Top Header & Actions ── */}
+      <motion.div variants={fade} initial="hidden" animate="show" className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
           <button
             onClick={() => router.push('/projects')}
-            className="w-8 h-8 flex items-center justify-center rounded-[7px] border border-[#E6E9E7] dark:border-white/[0.08] bg-white dark:bg-[#1B1E1C] text-[#626A66] hover:bg-[#F5F6F5] hover:text-[#171A18] transition-colors cursor-pointer shadow-[0_1px_2px_rgba(16,24,20,0.06)]"
+            className="w-9 h-9 flex items-center justify-center rounded-[8px] border border-[#E6E9E7] dark:border-white/[0.08] bg-white dark:bg-[#1B1E1C] text-[#626A66] hover:bg-[#F5F6F5] hover:text-[#171A18] transition-colors cursor-pointer shadow-sm shrink-0 mt-0.5"
+            aria-label="Back to projects"
           >
-            <ArrowLeft size={15} strokeWidth={1.75} />
+            <ArrowLeft size={16} strokeWidth={2} />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-[#E7F5EF] dark:bg-[rgba(7,155,104,0.15)] rounded-[10px] flex items-center justify-center shrink-0">
-              <Building size={20} className="text-[#079B68]" strokeWidth={1.75} />
+
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">
+                {project.project_name}
+              </h1>
+              <StatusBadge status={project.status || 'Planning'} />
             </div>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl font-semibold text-[#171A18] dark:text-[#EFF1F0] tracking-tight">{project.project_name}</h1>
-                <StatusBadge status={project.status || 'Planning'} />
-              </div>
-              <p className="text-xs text-[#929994] mt-0.5">{project.project_code} &bull; {project.project_type}</p>
-            </div>
+            <p className="text-xs text-[#929994] mt-1 flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-[#626A66] dark:text-[#9BA49E]">{project.project_code}</span>
+              <span>&bull;</span>
+              <span>{project.project_type}</span>
+              {project.client_name && (
+                <>
+                  <span>&bull;</span>
+                  <span>Client: <strong className="text-[#171A18] dark:text-[#EFF1F0]">{project.client_name}</strong></span>
+                </>
+              )}
+            </p>
           </div>
         </div>
-        <Button
-          onClick={() => router.push(`/projects/${project.id}/edit`)}
-          className="h-9 px-4 text-sm font-medium bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] gap-1.5 cursor-pointer shadow-sm transition-colors"
-        >
-          <Edit size={14} strokeWidth={2} /> Edit Project
-        </Button>
-      </motion.div>
 
-      {/* KPI strip */}
-      <motion.div variants={fade} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        {[
-          { label: 'Budget', icon: DollarSign, value: project.budget ? ('Rs.' + project.budget.toLocaleString()) : 'N/A', sub: null, accent: false },
-          { label: 'Budget Used', icon: BarChart3, value: (budgetUsedPct + '%'), sub: budgetUsedPct > 90 ? 'Over budget risk' : 'Within budget', accent: budgetUsedPct > 90 },
-          { label: 'Start Date', icon: Calendar, value: project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD', sub: null, accent: false },
-          { label: 'Due Date', icon: Clock, value: project.expected_completion_date ? new Date(project.expected_completion_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD', sub: null, accent: false },
-        ].map((kpi) => (
-          <div key={kpi.label} className="bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] p-4 shadow-[0_1px_4px_rgba(16,24,20,0.06)]">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#929994]">{kpi.label}</p>
-              <div className="w-7 h-7 rounded-[6px] flex items-center justify-center" style={{ background: kpi.accent ? '#F9EDEF' : '#E7F5EF' }}>
-                <kpi.icon size={13} style={{ color: kpi.accent ? '#B85B63' : '#079B68' }} strokeWidth={1.75} />
-              </div>
-            </div>
-            <p className="text-base font-semibold text-[#171A18] dark:text-[#EFF1F0] leading-tight">{kpi.value}</p>
-            {kpi.sub && <p className="text-[10px] mt-0.5" style={{ color: kpi.accent ? '#B85B63' : '#929994' }}>{kpi.sub}</p>}
-            {kpi.label === 'Budget Used' && project.budget && (
-              <div className="mt-2 h-1.5 bg-[#EEF0EF] dark:bg-white/[0.06] rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: (budgetUsedPct + '%') }}
-                  transition={{ duration: 0.9, ease: 'easeOut' }}
-                  className="h-full rounded-full"
-                  style={{ background: budgetUsedPct > 90 ? '#B85B63' : '#079B68' }}
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Detail cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SectionCard title="Client & Location">
-          <InfoRow icon={Building2} label="Client Name"   value={project.client_name || ''} />
-          <InfoRow icon={MapPin}    label="Site Address"  value={project.site_address || ''} />
-          <InfoRow icon={Building}  label="Organization"  value={org ? org.name : (project.organization_id ? 'Loading...' : '')} />
-        </SectionCard>
-
-        <SectionCard title="Financials & Timeline">
-          <InfoRow icon={DollarSign} label="Budget"              value={project.budget ? ('Rs.' + project.budget.toLocaleString()) : ''} />
-          <InfoRow icon={DollarSign} label="Estimated Cost"      value={project.estimated_cost ? ('Rs.' + project.estimated_cost.toLocaleString()) : ''} />
-          <InfoRow icon={Calendar}   label="Start Date"          value={project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''} />
-          <InfoRow icon={Calendar}   label="Expected Completion" value={project.expected_completion_date ? new Date(project.expected_completion_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''} />
-        </SectionCard>
-
-        {project.description && (
-          <motion.div
-            variants={fade}
-            className="md:col-span-2 bg-white dark:bg-[#1B1E1C] border border-[#E6E9E7] dark:border-white/[0.08] rounded-[10px] shadow-[0_1px_4px_rgba(16,24,20,0.06)]"
+        {/* Quick Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <Button
+            onClick={() => setIsDprModalOpen(true)}
+            className="h-9 px-3.5 text-xs font-semibold bg-[#079B68] hover:bg-[#087A55] text-white rounded-[8px] gap-1.5 cursor-pointer shadow-sm transition-colors"
           >
-            <div className="px-5 py-3.5 border-b border-[#E6E9E7] dark:border-white/[0.07]">
-              <h2 className="text-sm font-semibold text-[#171A18] dark:text-[#EFF1F0]">Description</h2>
-            </div>
-            <div className="px-5 py-4">
-              <p className="text-sm text-[#626A66] dark:text-[#9BA49E] leading-relaxed whitespace-pre-wrap">{project.description}</p>
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
+            <Plus size={14} strokeWidth={2.25} /> Log DPR
+          </Button>
+
+          <Button
+            onClick={() => setIsIssueModalOpen(true)}
+            variant="outline"
+            className="h-9 px-3.5 text-xs font-semibold border-[#E6E9E7] dark:border-white/[0.08] text-[#B85B63] hover:bg-[#F9EDEF] rounded-[8px] gap-1.5 cursor-pointer"
+          >
+            <AlertTriangle size={13} strokeWidth={2} /> Report Snag
+          </Button>
+
+          <Button
+            onClick={() => router.push(`/projects/${project.id}/edit`)}
+            variant="outline"
+            className="h-9 px-3.5 text-xs font-medium border-[#E6E9E7] dark:border-white/[0.08] bg-white dark:bg-[#1B1E1C] text-[#626A66] dark:text-[#9BA49E] hover:text-[#171A18] rounded-[8px] gap-1.5 cursor-pointer"
+          >
+            <Edit size={13} strokeWidth={2} /> Edit
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* ── 7-Tab Unified Workspace ── */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="overview" className="gap-1.5">
+            <LayoutDashboard size={14} /> Overview
+          </TabsTrigger>
+
+          <TabsTrigger value="dpr" className="gap-1.5">
+            <ClipboardList size={14} /> Daily Logs ({logs.length})
+          </TabsTrigger>
+
+          <TabsTrigger value="activities" className="gap-1.5">
+            <Layers size={14} /> Activities ({activities.length})
+          </TabsTrigger>
+
+          <TabsTrigger value="photos" className="gap-1.5">
+            <Camera size={14} /> Photos ({photos.length})
+          </TabsTrigger>
+
+          <TabsTrigger value="issues" className="gap-1.5">
+            <AlertCircle size={14} /> Snags & Issues
+            {openIssuesCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#B85B63] text-white">
+                {openIssuesCount}
+              </span>
+            )}
+          </TabsTrigger>
+
+          <TabsTrigger value="materials" className="gap-1.5">
+            <Package size={14} /> Materials ({inventory.length})
+          </TabsTrigger>
+
+          <TabsTrigger value="team" className="gap-1.5">
+            <Users size={14} /> Team & Labor
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab 1: Overview */}
+        <TabsContent value="overview">
+          <ProjectOverviewTab
+            project={project}
+            orgName={org?.name}
+            activities={activities}
+            issues={issues}
+            logs={logs}
+            inventory={inventory}
+            membersCount={projectMembers.length}
+            onSelectTab={setActiveTab}
+          />
+        </TabsContent>
+
+        {/* Tab 2: DPR Logs */}
+        <TabsContent value="dpr">
+          <ProjectDprTab logs={logs} onOpenDprModal={() => setIsDprModalOpen(true)} />
+        </TabsContent>
+
+        {/* Tab 3: Activities */}
+        <TabsContent value="activities">
+          <ProjectActivitiesTab projectId={projectId} activities={activities} />
+        </TabsContent>
+
+        {/* Tab 4: Photos */}
+        <TabsContent value="photos">
+          <ProjectPhotosTab projectId={projectId} photos={photos} />
+        </TabsContent>
+
+        {/* Tab 5: Issues & Snags */}
+        <TabsContent value="issues">
+          <ProjectIssuesTab issues={issues} onOpenIssueModal={() => setIsIssueModalOpen(true)} />
+        </TabsContent>
+
+        {/* Tab 6: Materials */}
+        <TabsContent value="materials">
+          <ProjectMaterialsTab
+            projectId={projectId}
+            inventory={inventory}
+            masterMaterials={masterMaterials}
+            requests={requests}
+          />
+        </TabsContent>
+
+        {/* Tab 7: Team */}
+        <TabsContent value="team">
+          <ProjectTeamTab members={projectMembers} workers={workers} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      <CreateDprModal
+        isOpen={isDprModalOpen}
+        onClose={() => setIsDprModalOpen(false)}
+        projectId={projectId}
+      />
+
+      <CreateIssueModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        projectId={projectId}
+      />
+    </div>
   );
 }

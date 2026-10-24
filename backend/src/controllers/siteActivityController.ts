@@ -4,7 +4,18 @@ import { SiteActivity } from '../types';
 
 export const getSiteActivities = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('site_activities').select('*');
+    const { project_id, daily_log_id, status } = req.query;
+    let query = supabase.from('site_activities').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    if (daily_log_id) {
+      query = query.eq('daily_log_id', daily_log_id as string);
+    }
+    if (status && status !== 'All') {
+      query = query.eq('status', status as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

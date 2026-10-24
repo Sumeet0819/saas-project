@@ -4,7 +4,18 @@ import { SiteIssue } from '../types';
 
 export const getSiteIssues = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('site_issues').select('*');
+    const { project_id, status, priority } = req.query;
+    let query = supabase.from('site_issues').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    if (status && status !== 'All') {
+      query = query.eq('status', status as string);
+    }
+    if (priority && priority !== 'All') {
+      query = query.eq('priority', priority as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

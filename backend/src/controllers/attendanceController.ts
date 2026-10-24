@@ -4,7 +4,15 @@ import { Attendance } from '../types';
 
 export const getAttendances = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('attendance').select('*');
+    const { project_id, attendance_date } = req.query;
+    let query = supabase.from('attendance').select('*, worker:workers(*)');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    if (attendance_date) {
+      query = query.eq('attendance_date', attendance_date as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

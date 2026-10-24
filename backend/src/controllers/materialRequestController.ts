@@ -4,7 +4,12 @@ import { MaterialRequest } from '../types';
 
 export const getMaterialRequests = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('material_requests').select('*');
+    const { project_id } = req.query;
+    let query = supabase.from('material_requests').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

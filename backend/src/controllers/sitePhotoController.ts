@@ -4,7 +4,15 @@ import { SitePhoto } from '../types';
 
 export const getSitePhotos = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('site_photos').select('*');
+    const { project_id, daily_log_id } = req.query;
+    let query = supabase.from('site_photos').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    if (daily_log_id) {
+      query = query.eq('daily_log_id', daily_log_id as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

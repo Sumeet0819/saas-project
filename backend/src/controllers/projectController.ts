@@ -4,12 +4,15 @@ import { Project } from '../types';
 
 export const getProjects = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log(`[API /projects] Attempting to fetch projects from Supabase...`);
-    const { data, error } = await supabase.from('projects').select('*');
-    
-    console.log(`[API /projects] Supabase responded with error:`, error);
-    console.log(`[API /projects] Supabase responded with data length:`, data ? data.length : 'null');
-    console.log(`[API /projects] Supabase raw data:`, JSON.stringify(data));
+    const { organization_id, status } = req.query;
+    let query = supabase.from('projects').select('*');
+    if (organization_id) {
+      query = query.eq('organization_id', organization_id as string);
+    }
+    if (status && status !== 'All') {
+      query = query.eq('status', status as string);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       res.status(400).json({ error: error.message });
@@ -74,6 +77,24 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
       return;
     }
     res.status(200).json({ message: 'Project deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getProjectMembers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from('project_members')
+      .select('id, project_id, designation, assigned_at, user:users(id, full_name, email, role, phone, profile_photo)')
+      .eq('project_id', id);
+
+    if (error) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    res.status(200).json(data);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

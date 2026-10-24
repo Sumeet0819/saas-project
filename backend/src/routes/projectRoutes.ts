@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { requireAuth, authorizeRoles } from '../middlewares/auth';
-import { getProjects, createProject, getProjectById, updateProject, deleteProject } from '../controllers/projectController';
+import { getProjects, createProject, getProjectById, updateProject, deleteProject, getProjectMembers } from '../controllers/projectController';
 
 const router = Router();
 
 // Apply auth middleware and RBAC
 router.use(requireAuth);
-router.use(authorizeRoles('Admin', 'Project Manager'));
+router.use(authorizeRoles('Admin', 'Project Manager', 'Site Engineer'));
 
 router.get('/debug-key', (req, res) => {
   const { supabase } = require('../config/supabase');
@@ -21,6 +21,7 @@ router.get('/debug-key', (req, res) => {
 router.get('/', getProjects);
 router.post('/', createProject);
 router.get('/:id', getProjectById);
+router.get('/:id/members', getProjectMembers);
 router.patch('/:id', updateProject);
 router.delete('/:id', deleteProject);
 

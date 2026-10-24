@@ -4,7 +4,12 @@ import { MaterialInventory } from '../types';
 
 export const getMaterialInventories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('material_inventory').select('*');
+    const { project_id } = req.query;
+    let query = supabase.from('material_inventory').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    const { data, error } = await query;
     if (error) {
       res.status(400).json({ error: error.message });
       return;

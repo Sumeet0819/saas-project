@@ -242,7 +242,13 @@ export default function MaterialsPage() {
           <div className="w-full sm:w-56">
             <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val || 'all')}>
               <SelectTrigger className={selectTriggerCls}>
-                <SelectValue placeholder="All Projects" />
+                <SelectValue placeholder="All Projects">
+                  {(val: string | null) => {
+                    if (!val || val === 'all') return 'All Projects';
+                    const p = orgProjects.find((proj) => proj.id === val);
+                    return p ? p.project_name : 'All Projects';
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Projects</SelectItem>

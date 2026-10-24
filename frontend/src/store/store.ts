@@ -11,6 +11,10 @@ import workersReducer from './slices/workersSlice';
 import materialMasterReducer from './slices/materialMasterSlice';
 import materialInventoryReducer from './slices/materialInventorySlice';
 import materialRequestsReducer from './slices/materialRequestsSlice';
+import dailyLogsReducer from './slices/dailyLogsSlice';
+import siteActivitiesReducer from './slices/siteActivitiesSlice';
+import siteIssuesReducer from './slices/siteIssuesSlice';
+import sitePhotosReducer from './slices/sitePhotosSlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +28,10 @@ export const store = configureStore({
     materialMaster: materialMasterReducer,
     materialInventory: materialInventoryReducer,
     materialRequests: materialRequestsReducer,
+    dailyLogs: dailyLogsReducer,
+    siteActivities: siteActivitiesReducer,
+    siteIssues: siteIssuesReducer,
+    sitePhotos: sitePhotosReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(apiSlice.middleware),

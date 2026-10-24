@@ -4,7 +4,15 @@ import { DailyLog } from '../types';
 
 export const getDailyLogs = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data, error } = await supabase.from('daily_logs').select('*');
+    const { project_id, date } = req.query;
+    let query = supabase.from('daily_logs').select('*');
+    if (project_id) {
+      query = query.eq('project_id', project_id as string);
+    }
+    if (date) {
+      query = query.eq('log_date', date as string);
+    }
+    const { data, error } = await query.order('log_date', { ascending: false });
     if (error) {
       res.status(400).json({ error: error.message });
       return;

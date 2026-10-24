@@ -5,6 +5,7 @@ import api from '../../services/api';
 interface ProjectsState {
   projects: Project[];
   currentProject: Project | null;
+  projectMembers: any[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
@@ -12,6 +13,7 @@ interface ProjectsState {
 const initialState: ProjectsState = {
   projects: [],
   currentProject: null,
+  projectMembers: [],
   status: 'idle',
   error: null,
 };
@@ -23,6 +25,11 @@ export const fetchProjects = createAsyncThunk('projects/fetchProjects', async ()
 
 export const fetchProjectById = createAsyncThunk('projects/fetchProjectById', async (id: string) => {
   const response = await api.get(`/projects/${id}`);
+  return response.data;
+});
+
+export const fetchProjectMembers = createAsyncThunk('projects/fetchProjectMembers', async (id: string) => {
+  const response = await api.get(`/projects/${id}/members`);
   return response.data;
 });
 
@@ -74,6 +81,10 @@ const projectsSlice = createSlice({
       .addCase(fetchProjectById.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch project details';
+      })
+      // Fetch members
+      .addCase(fetchProjectMembers.fulfilled, (state, action: PayloadAction<any[]>) => {
+        state.projectMembers = action.payload;
       })
       // Create
       .addCase(createProject.fulfilled, (state, action: PayloadAction<Project>) => {
